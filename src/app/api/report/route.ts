@@ -6,7 +6,7 @@ import { NextResponse, type NextRequest } from "next/server";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-  const rate = db.checkRateLimit(rateKey(req, "report"), 20, 60 * 60 * 1000);
+  const rate = await db.checkRateLimit(rateKey(req, "report"), 20, 60 * 60 * 1000);
   if (!rate.allowed) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "donnees_invalides" }, { status: 400 });
   }
 
-  const creation = db.getCreation(id);
+  const creation = await db.getCreation(id);
   if (
     !creation ||
     creation.status !== "active" ||
@@ -33,6 +33,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "introuvable" }, { status: 404 });
   }
 
-  db.reportCreation(id, reason);
+  await db.reportCreation(id, reason);
   return NextResponse.json({ ok: true });
 }

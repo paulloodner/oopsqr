@@ -1,6 +1,4 @@
-import Database from "better-sqlite3";
-import fs from "node:fs";
-import path from "node:path";
+import { neon } from "@neondatabase/serverless";
 
 import { randomId } from "./validation";
 import { SEED_SURPRISES } from "./seed-surprises";
@@ -11,93 +9,83 @@ import type {
   Surprise,
 } from "./types";
 
-const DB_DIR = path.join(process.cwd(), process.env.DATA_DIR ?? "data");
-const DB_FILE = path.join(DB_DIR, "oopsqr.db");
-const UPLOAD_DIR = path.join(DB_DIR, "uploads");
+/**
+ * Persistance serverless : Postgres managé (Neon / Vercel Postgres).
+ * Aucune écriture disque : les images sont stockées en base64 dans la table
+ * `creations`, ce qui permet le déploiement sur Vercel (FS éphémère).
+ */
 
-declare global {
-  // eslint-disable-next-line no-var
-  var __oopsqrDb: Database.Database | undefined;
+const url = process.env.DATABASE_URL;
+if (!url) {
+  // eslint-disable-next-line no-console
+  console.warn("[db] DATABASE_URL manquant : renseigner Neon/Vercel Postgres.");
 }
+const sql = neon(url ?? "postgres://invalid");
 
-function createDb(): Database.Database {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-  const d = new Database(DB_FILE);
-  d.pragma("journal_mode = WAL");
-  d.pragma("synchronous = NORMAL");
-  d.pragma("busy_timeout = 5000");
-  d.exec(`
-    CREATE TABLE IF NOT EXISTS surprises (
-      id TEXT PRIMARY KEY,
-      category TEXT NOT NULL,
-      title TEXT NOT NULL,
-      description TEXT NOT NULL,
-      emoji TEXT NOT NULL DEFAULT '',
-      text TEXT NOT NULL,
-      active INTEGER NOT NULL DEFAULT 1,
-      sort INTEGER NOT NULL DEFAULT 0,
-      createdAt TEXT NOT NULL
-    );
+let schemaReady: Promise<void> | null = null;
 
-    CREATE TABLE IF NOT EXISTS creations (
-      id TEXT PRIMARY KEY,
-      type TEXT NOT NULL,
-      text TEXT,
-      emoji TEXT,
-      caption TEXT,
-      imagePath TEXT,
-      imageMime TEXT,
-      fg TEXT NOT NULL DEFAULT '#17151F',
-      bg TEXT NOT NULL DEFAULT '#F7F5F0',
-      createdAt TEXT NOT NULL,
-      expiresAt TEXT NOT NULL,
-      views INTEGER NOT NULL DEFAULT 0,
-      downloads INTEGER NOT NULL DEFAULT 0,
-      reportedAt TEXT,
-      reportReason TEXT,
-      status TEXT NOT NULL DEFAULT 'active'
-    );
+function ensureSchema(): Promise<void> {
+  if (!schemaReady) {
+    schemaReady = (async () => {
+      await sql`
+        CREATE TABLE IF NOT EXISTS surprises (
+          id TEXT PRIMARY KEY,
+          category TEXT NOT NULL,
+          title TEXT NOT NULL,
+          description TEXT NOT NULL,
+          emoji TEXT NOT NULL DEFAULT '',
+          text TEXT NOT NULL,
+          active BOOLEAN NOT NULL DEFAULT TRUE,
+          sort INTEGER NOT NULL DEFAULT 0,
+          createdAt TIMESTAMPTZ NOT NULL DEFAULT now()
+        )`;
+      await sql`
+        CREATE TABLE IF NOT EXISTS creations (
+          id TEXT PRIMARY KEY,
+          type TEXT NOT NULL,
+          text TEXT,
+          emoji TEXT,
+          caption TEXT,
+          imageB64 TEXT,
+          imageMime TEXT,
+          fg TEXT NOT NULL DEFAULT '#17151F',
+          bg TEXT NOT NULL DEFAULT '#F7F5F0',
+          createdAt TIMESTAMPTZ NOT NULL DEFAULT now(),
+          expiresAt TIMESTAMPTZ NOT NULL,
+          views INTEGER NOT NULL DEFAULT 0,
+          downloads INTEGER NOT NULL DEFAULT 0,
+          reportedAt TIMESTAMPTZ,
+          reportReason TEXT,
+          status TEXT NOT NULL DEFAULT 'active'
+        )`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_creations_expires ON creations(expiresAt)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_creations_status ON creations(status)`;
+      await sql`
+        CREATE TABLE IF NOT EXISTS events (
+          id SERIAL PRIMARY KEY,
+          name TEXT NOT NULL,
+          detail TEXT,
+          createdAt TIMESTAMPTZ NOT NULL DEFAULT now()
+        )`;
+      await sql`
+        CREATE TABLE IF NOT EXISTS rate_limits (
+          key TEXT PRIMARY KEY,
+          count INTEGER NOT NULL DEFAULT 0,
+          resetAt BIGINT NOT NULL
+        )`;
 
-    CREATE INDEX IF NOT EXISTS idx_creations_expires ON creations(expiresAt);
-    CREATE INDEX IF NOT EXISTS idx_creations_status ON creations(status);
-
-    CREATE TABLE IF NOT EXISTS events (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      detail TEXT,
-      createdAt TEXT NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS rate_limits (
-      key TEXT PRIMARY KEY,
-      count INTEGER NOT NULL DEFAULT 0,
-      resetAt INTEGER NOT NULL
-    );
-  `);
-
-  const count = d.prepare("SELECT COUNT(*) AS n FROM surprises").get() as {
-    n: number;
-  };
-  if (count.n === 0) {
-    const insert = d.prepare(
-      `INSERT INTO surprises (id, category, title, description, emoji, text, active, sort, createdAt)
-       VALUES (@id, @category, @title, @description, @emoji, @text, @active, @sort, @createdAt)`
-    );
-    const tx = d.transaction((rows: typeof SEED_SURPRISES) => {
-      for (const row of rows) {
-        insert.run({ ...row, active: row.active ? 1 : 0 });
+      const count = await sql`SELECT COUNT(*)::int AS n FROM surprises`;
+      if ((count[0] as { n: number }).n === 0) {
+        for (const row of SEED_SURPRISES) {
+          await sql`
+            INSERT INTO surprises (id, category, title, description, emoji, text, active, sort, createdAt)
+            VALUES (${row.id}, ${row.category}, ${row.title}, ${row.description}, ${row.emoji}, ${row.text}, ${row.active}, ${row.sort}, ${row.createdAt})
+            ON CONFLICT (id) DO NOTHING`;
+        }
       }
-    });
-    tx(SEED_SURPRISES);
+    })();
   }
-  return d;
-}
-
-function raw(): Database.Database {
-  if (!globalThis.__oopsqrDb) {
-    globalThis.__oopsqrDb = createDb();
-  }
-  return globalThis.__oopsqrDb;
+  return schemaReady;
 }
 
 function rowToSurprise(row: any): Surprise {
@@ -108,9 +96,9 @@ function rowToSurprise(row: any): Surprise {
     description: row.description,
     emoji: row.emoji,
     text: row.text,
-    active: row.active === 1,
+    active: Boolean(row.active),
     sort: row.sort,
-    createdAt: row.createdAt,
+    createdAt: new Date(row.createdAt).toISOString(),
   };
 }
 
@@ -121,16 +109,16 @@ function rowToCreation(row: any): Creation {
     text: row.text ?? null,
     emoji: row.emoji ?? null,
     caption: row.caption ?? null,
-    imagePath: row.imagePath ?? null,
-    imageMime: row.imageMime ?? null,
+    imageB64: row.imageb64 ?? row.imageB64 ?? null,
+    imageMime: row.imagemime ?? row.imageMime ?? null,
     fg: row.fg,
     bg: row.bg,
-    createdAt: row.createdAt,
-    expiresAt: row.expiresAt,
+    createdAt: new Date(row.createdAt).toISOString(),
+    expiresAt: new Date(row.expiresAt ?? row.expiresat).toISOString(),
     views: row.views,
     downloads: row.downloads,
-    reportedAt: row.reportedAt ?? null,
-    reportReason: row.reportReason ?? null,
+    reportedAt: row.reportedat ?? row.reportedAt ? new Date(row.reportedat ?? row.reportedAt).toISOString() : null,
+    reportReason: row.reportreason ?? row.reportReason ?? null,
     status: row.status,
   };
 }
@@ -139,20 +127,19 @@ function rowToCreation(row: any): Creation {
 
 export const db = {
   /* surprises */
-  listSurprises(onlyActive = true): Surprise[] {
-    const rows = raw()
-      .prepare(
-        `SELECT * FROM surprises ${onlyActive ? "WHERE active = 1" : ""}
-         ORDER BY sort ASC, createdAt ASC`
-      )
-      .all();
+  async listSurprises(onlyActive = true): Promise<Surprise[]> {
+    await ensureSchema();
+    const rows = onlyActive
+      ? await sql`SELECT * FROM surprises WHERE active = TRUE ORDER BY sort ASC, createdAt ASC`
+      : await sql`SELECT * FROM surprises ORDER BY sort ASC, createdAt ASC`;
     return (rows as any[]).map(rowToSurprise);
   },
-  getSurprise(id: string): Surprise | null {
-    const row = raw().prepare("SELECT * FROM surprises WHERE id = ?").get(id);
-    return row ? rowToSurprise(row) : null;
+  async getSurprise(id: string): Promise<Surprise | null> {
+    await ensureSchema();
+    const rows = await sql`SELECT * FROM surprises WHERE id = ${id}`;
+    return rows[0] ? rowToSurprise(rows[0]) : null;
   },
-  saveSurprise(input: {
+  async saveSurprise(input: {
     id: string;
     category: string;
     title: string;
@@ -161,244 +148,155 @@ export const db = {
     text: string;
     active: boolean;
     sort: number;
-  }): Surprise {
-    const existing = this.getSurprise(input.id);
-    if (existing) {
-      raw()
-        .prepare(
-          `UPDATE surprises SET category = @category, title = @title, description = @description,
-           emoji = @emoji, text = @text, active = @active, sort = @sort WHERE id = @id`
-        )
-        .run({ ...input, active: input.active ? 1 : 0 });
-    } else {
-      raw()
-        .prepare(
-          `INSERT INTO surprises (id, category, title, description, emoji, text, active, sort, createdAt)
-           VALUES (@id, @category, @title, @description, @emoji, @text, @active, @sort, @createdAt)`
-        )
-        .run({ ...input, active: input.active ? 1 : 0, createdAt: new Date().toISOString() });
-    }
-    return this.getSurprise(input.id)!;
+  }): Promise<Surprise> {
+    await ensureSchema();
+    await sql`
+      INSERT INTO surprises (id, category, title, description, emoji, text, active, sort, createdAt)
+      VALUES (${input.id}, ${input.category}, ${input.title}, ${input.description}, ${input.emoji}, ${input.text}, ${input.active}, ${input.sort}, now())
+      ON CONFLICT (id) DO UPDATE SET
+        category = EXCLUDED.category, title = EXCLUDED.title, description = EXCLUDED.description,
+        emoji = EXCLUDED.emoji, text = EXCLUDED.text, active = EXCLUDED.active, sort = EXCLUDED.sort`;
+    return (await this.getSurprise(input.id))!;
   },
-  deleteSurprise(id: string): boolean {
-    return raw().prepare("DELETE FROM surprises WHERE id = ?").run(id).changes > 0;
+  async deleteSurprise(id: string): Promise<boolean> {
+    await ensureSchema();
+    const res = await sql`DELETE FROM surprises WHERE id = ${id}`;
+    return (res as any).count > 0;
   },
 
   /* creations */
-  createCreation(input: NewCreation): Creation {
-    raw()
-      .prepare(
-        `INSERT INTO creations (id, type, text, emoji, caption, imagePath, imageMime, fg, bg, createdAt, expiresAt, status)
-         VALUES (@id, @type, @text, @emoji, @caption, @imagePath, @imageMime, @fg, @bg, @createdAt, @expiresAt, 'active')`
-      )
-      .run({ ...input, createdAt: new Date().toISOString() });
-    this.recordEvent("creation", input.id);
-    return this.getCreation(input.id)!;
+  async createCreation(input: NewCreation): Promise<Creation> {
+    await ensureSchema();
+    await sql`
+      INSERT INTO creations (id, type, text, emoji, caption, imageB64, imageMime, fg, bg, createdAt, expiresAt, status)
+      VALUES (${input.id}, ${input.type}, ${input.text}, ${input.emoji}, ${input.caption}, ${input.imageB64}, ${input.imageMime}, ${input.fg}, ${input.bg}, now(), ${input.expiresAt}, 'active')`;
+    await this.recordEvent("creation", input.id);
+    return (await this.getCreation(input.id))!;
   },
-  getCreation(id: string): Creation | null {
-    const row = raw().prepare("SELECT * FROM creations WHERE id = ?").get(id);
-    return row ? rowToCreation(row) : null;
+  async getCreation(id: string): Promise<Creation | null> {
+    await ensureSchema();
+    const rows = await sql`SELECT * FROM creations WHERE id = ${id}`;
+    return rows[0] ? rowToCreation(rows[0]) : null;
   },
-  incrementView(id: string): void {
-    raw().prepare("UPDATE creations SET views = views + 1 WHERE id = ?").run(id);
+  async incrementView(id: string): Promise<void> {
+    await ensureSchema();
+    await sql`UPDATE creations SET views = views + 1 WHERE id = ${id}`;
   },
-  incrementDownloads(id: string): void {
-    raw().prepare("UPDATE creations SET downloads = downloads + 1 WHERE id = ?").run(id);
+  async incrementDownloads(id: string): Promise<void> {
+    await ensureSchema();
+    await sql`UPDATE creations SET downloads = downloads + 1 WHERE id = ${id}`;
   },
-  reportCreation(id: string, reason: string): boolean {
-    return (
-      raw()
-        .prepare(
-          "UPDATE creations SET reportedAt = ?, reportReason = ? WHERE id = ? AND reportedAt IS NULL"
-        )
-        .run(new Date().toISOString(), reason, id).changes > 0
-    );
+  async reportCreation(id: string, reason: string): Promise<boolean> {
+    await ensureSchema();
+    const res = await sql`
+      UPDATE creations SET reportedAt = now(), reportReason = ${reason}
+      WHERE id = ${id} AND reportedAt IS NULL`;
+    return (res as any).count > 0;
   },
-  listCreations(status?: string): Creation[] {
+  async listCreations(status?: string): Promise<Creation[]> {
+    await ensureSchema();
     const rows = status
-      ? raw()
-          .prepare(
-            "SELECT * FROM creations WHERE status = ? ORDER BY createdAt DESC"
-          )
-          .all(status)
-      : raw().prepare("SELECT * FROM creations ORDER BY createdAt DESC").all();
+      ? await sql`SELECT * FROM creations WHERE status = ${status} ORDER BY createdAt DESC`
+      : await sql`SELECT * FROM creations ORDER BY createdAt DESC`;
     return (rows as any[]).map(rowToCreation);
   },
-  listReports(): Creation[] {
-    const rows = raw()
-      .prepare(
-        "SELECT * FROM creations WHERE reportedAt IS NOT NULL ORDER BY reportedAt DESC"
-      )
-      .all();
+  async listReports(): Promise<Creation[]> {
+    await ensureSchema();
+    const rows = await sql`SELECT * FROM creations WHERE reportedAt IS NOT NULL ORDER BY reportedAt DESC`;
     return (rows as any[]).map(rowToCreation);
   },
-  clearReport(id: string): boolean {
-    return (
-      raw()
-        .prepare(
-          "UPDATE creations SET reportedAt = NULL, reportReason = NULL WHERE id = ?"
-        )
-        .run(id).changes > 0
-    );
+  async clearReport(id: string): Promise<boolean> {
+    await ensureSchema();
+    const res = await sql`UPDATE creations SET reportedAt = NULL, reportReason = NULL WHERE id = ${id}`;
+    return (res as any).count > 0;
   },
-  deleteCreation(id: string): boolean {
-    const row = this.getCreation(id);
-    if (!row) return false;
-    if (row.imagePath) {
-      const clean = path.normalize(row.imagePath).replace(/^(\.\.[\/\\])+/, "");
-      const full = path.join(DB_DIR, clean);
-      if (full.startsWith(UPLOAD_DIR) && fs.existsSync(full)) {
-        fs.unlinkSync(full);
-      }
-    }
-    raw().prepare("DELETE FROM creations WHERE id = ?").run(id);
-    return true;
+  async deleteCreation(id: string): Promise<boolean> {
+    await ensureSchema();
+    const res = await sql`DELETE FROM creations WHERE id = ${id}`;
+    return (res as any).count > 0;
   },
-  newCreationId(): string {
+  async newCreationId(): Promise<string> {
     for (let i = 0; i < 6; i += 1) {
       const id = randomId(8);
-      if (!this.getCreation(id)) return id;
+      if (!(await this.getCreation(id))) return id;
     }
     return randomId(12);
   },
 
-  /* images */
-  saveUploadedImage(id: string, bytes: Buffer, mime: string): string {
-    const ext = mime === "image/webp" ? "webp" : mime === "image/jpeg" ? "jpg" : "png";
-    const name = `${id}.${ext}`;
-    fs.writeFileSync(path.join(UPLOAD_DIR, name), bytes);
-    return `uploads/${name}`;
+  /* images (stockées en base64, pas de disque) */
+  async readUploadedImage(id: string): Promise<{ bytes: Buffer; mime: string } | null> {
+    const creation = await this.getCreation(id);
+    if (!creation || !creation.imageB64 || !creation.imageMime) return null;
+    return { bytes: Buffer.from(creation.imageB64, "base64"), mime: creation.imageMime };
   },
-  readUploadedImage(relPath: string): { bytes: Buffer; mime: string } | null {
-    const clean = path.normalize(relPath).replace(/^(\.\.[\/\\])+/, "");
-    const full = path.join(DB_DIR, clean);
-    if (!full.startsWith(UPLOAD_DIR)) return null;
-    if (!fs.existsSync(full)) return null;
-    const ext = path.extname(full).toLowerCase();
-    const mime = ext === ".webp" ? "image/webp" : ext === ".jpg" ? "image/jpeg" : "image/png";
-    return { bytes: fs.readFileSync(full), mime };
-  },
-  storageBytes(): number {
-    let total = fs.existsSync(DB_FILE) ? fs.statSync(DB_FILE).size : 0;
-    if (fs.existsSync(UPLOAD_DIR)) {
-      for (const file of fs.readdirSync(UPLOAD_DIR)) {
-        total += fs.statSync(path.join(UPLOAD_DIR, file)).size;
-      }
-    }
-    return total;
+  async storageBytes(): Promise<number> {
+    await ensureSchema();
+    const rows = await sql`SELECT COALESCE(SUM(LENGTH(imageB64)), 0)::bigint AS n FROM creations`;
+    return Math.round(Number((rows[0] as any).n) * 0.75);
   },
 
   /* cleanup */
-  cleanupExpired(): {
-    expired: number;
-    removedFiles: number;
-    purged: number;
-  } {
-    const nowIso = new Date().toISOString();
-    const expiring = raw()
-      .prepare(
-        "SELECT id, imagePath FROM creations WHERE status = 'active' AND expiresAt <= ?"
-      )
-      .all(nowIso) as any[];
-
-    let removedFiles = 0;
-    const tx = raw().transaction((rows: any[]) => {
-      for (const row of rows) {
-        raw()
-          .prepare("UPDATE creations SET status = 'expired' WHERE id = ?")
-          .run(row.id);
-        if (row.imagePath) {
-          const clean = path.normalize(row.imagePath).replace(/^(\.\.[\/\\])+/, "");
-          const full = path.join(DB_DIR, clean);
-          if (full.startsWith(UPLOAD_DIR) && fs.existsSync(full)) {
-            fs.unlinkSync(full);
-            removedFiles += 1;
-          }
-        }
-      }
-    });
-    tx(expiring);
-
-    const purgeDate = new Date(
-      Date.now() - 30 * 24 * 60 * 60 * 1000
-    ).toISOString();
-    const purged = raw()
-      .prepare(
-        "DELETE FROM creations WHERE status = 'expired' AND expiresAt <= ?"
-      )
-      .run(purgeDate).changes;
-
-    raw().prepare(
-      "DELETE FROM rate_limits WHERE resetAt < ?"
-    ).run(Date.now() - 24 * 60 * 60 * 1000);
-
-    if (expiring.length > 0) this.recordEvent("cleanup", `${expiring.length} expiration(s)`);
-    return { expired: expiring.length, removedFiles, purged };
+  async cleanupExpired(): Promise<{ expired: number; removedFiles: number; purged: number }> {
+    await ensureSchema();
+    const expiring = (await sql`
+      SELECT id FROM creations WHERE status = 'active' AND expiresAt <= now()`) as any[];
+    for (const row of expiring) {
+      await sql`UPDATE creations SET status = 'expired', imageB64 = NULL WHERE id = ${row.id}`;
+    }
+    const purge = await sql`
+      DELETE FROM creations WHERE status = 'expired' AND expiresAt <= now() - INTERVAL '30 days'`;
+    await sql`DELETE FROM rate_limits WHERE resetAt < ${Date.now() - 24 * 60 * 60 * 1000}`;
+    if (expiring.length > 0) await this.recordEvent("cleanup", `${expiring.length} expiration(s)`);
+    return { expired: expiring.length, removedFiles: expiring.length, purged: (purge as any).count };
   },
 
   /* events */
-  recordEvent(name: string, detail?: string): void {
-    raw()
-      .prepare("INSERT INTO events (name, detail, createdAt) VALUES (?, ?, ?)")
-      .run(name, detail ?? null, new Date().toISOString());
+  async recordEvent(name: string, detail?: string): Promise<void> {
+    await ensureSchema();
+    await sql`INSERT INTO events (name, detail, createdAt) VALUES (${name}, ${detail ?? null}, now())`;
   },
-  listEvents(limit = 50): Array<{
-    id: number;
-    name: string;
-    detail: string | null;
-    createdAt: string;
-  }> {
-    return raw()
-      .prepare("SELECT * FROM events ORDER BY id DESC LIMIT ?")
-      .all(limit) as any[];
+  async listEvents(limit = 50): Promise<Array<{ id: number; name: string; detail: string | null; createdAt: string }>> {
+    await ensureSchema();
+    const rows = (await sql`SELECT * FROM events ORDER BY id DESC LIMIT ${limit}`) as any[];
+    return rows.map((r) => ({ id: r.id, name: r.name, detail: r.detail, createdAt: new Date(r.createdAt ?? r.createdat).toISOString() }));
   },
 
   /* stats */
-  getStats(): AdminStats {
-    const d = raw();
-    const totals = d
-      .prepare(
-        `SELECT
-           COUNT(*) AS total,
-           SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) AS active,
-           SUM(views) AS scans,
-           SUM(downloads) AS downloads,
-           SUM(CASE WHEN reportedAt IS NOT NULL THEN 1 ELSE 0 END) AS reports
-         FROM creations`
-      )
-      .get() as any;
+  async getStats(): Promise<AdminStats> {
+    await ensureSchema();
+    const totals = (await sql`
+      SELECT
+        COUNT(*)::int AS total,
+        SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END)::int AS active,
+        SUM(views)::int AS scans,
+        SUM(downloads)::int AS downloads,
+        SUM(CASE WHEN reportedAt IS NOT NULL THEN 1 ELSE 0 END)::int AS reports
+      FROM creations`) as any[];
+    const t = totals[0];
     return {
-      totalCreations: totals.total ?? 0,
-      activeCreations: totals.active ?? 0,
-      totalScans: totals.scans ?? 0,
-      totalDownloads: totals.downloads ?? 0,
-      reports: totals.reports ?? 0,
-      storageBytes: this.storageBytes(),
+      totalCreations: t.total ?? 0,
+      activeCreations: t.active ?? 0,
+      totalScans: t.scans ?? 0,
+      totalDownloads: t.downloads ?? 0,
+      reports: t.reports ?? 0,
+      storageBytes: await this.storageBytes(),
     };
   },
 
   /* rate limit */
-  checkRateLimit(
-    key: string,
-    max: number,
-    windowMs: number
-  ): { allowed: boolean; remaining: number } {
-    const d = raw();
+  async checkRateLimit(key: string, max: number, windowMs: number): Promise<{ allowed: boolean; remaining: number }> {
+    await ensureSchema();
     const now = Date.now();
-    const row = d
-      .prepare("SELECT count, resetAt FROM rate_limits WHERE key = ?")
-      .get(key) as any;
-    if (!row || row.resetAt < now) {
-      d.prepare(
-        "INSERT INTO rate_limits (key, count, resetAt) VALUES (?, 1, ?) ON CONFLICT(key) DO UPDATE SET count = 1, resetAt = excluded.resetAt"
-      ).run(key, now + windowMs);
+    const rows = (await sql`SELECT count, resetAt FROM rate_limits WHERE key = ${key}`) as any[];
+    const row = rows[0];
+    if (!row || Number(row.resetat ?? row.resetAt) < now) {
+      await sql`
+        INSERT INTO rate_limits (key, count, resetAt) VALUES (${key}, 1, ${now + windowMs})
+        ON CONFLICT (key) DO UPDATE SET count = 1, resetAt = EXCLUDED.resetAt`;
       return { allowed: true, remaining: max - 1 };
     }
     if (row.count >= max) return { allowed: false, remaining: 0 };
-    d.prepare("UPDATE rate_limits SET count = count + 1 WHERE key = ?").run(key);
+    await sql`UPDATE rate_limits SET count = count + 1 WHERE key = ${key}`;
     return { allowed: true, remaining: max - row.count - 1 };
   },
 };
-
-export type DatabaseInstance = Database.Database;
-export { raw as _rawDb };

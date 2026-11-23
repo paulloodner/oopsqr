@@ -8,7 +8,7 @@ export async function GET() {
   if (!(await isAdmin())) {
     return NextResponse.json({ error: "non_autorise" }, { status: 401 });
   }
-  return NextResponse.json(db.listReports());
+  return NextResponse.json(await db.listReports());
 }
 
 export async function POST(req: NextRequest) {
@@ -25,10 +25,10 @@ export async function POST(req: NextRequest) {
   if (!id) return NextResponse.json({ error: "id_requis" }, { status: 400 });
 
   if (body.action === "dismiss") {
-    return NextResponse.json({ ok: db.clearReport(id) });
+    return NextResponse.json({ ok: await db.clearReport(id) });
   }
   if (body.action === "delete") {
-    return NextResponse.json({ ok: db.deleteCreation(id) });
+    return NextResponse.json({ ok: await db.deleteCreation(id) });
   }
   return NextResponse.json({ error: "action_invalide" }, { status: 400 });
 }

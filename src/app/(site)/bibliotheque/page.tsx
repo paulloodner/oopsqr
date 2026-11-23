@@ -18,7 +18,7 @@ export default async function LibraryPage({
   searchParams: Promise<{ c?: string }>;
 }) {
   const { c } = await searchParams;
-  const surprises = db.listSurprises();
+  const surprises = await db.listSurprises();
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10 md:py-14">

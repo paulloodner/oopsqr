@@ -8,7 +8,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const creation = db.getCreation(id);
+  const creation = await db.getCreation(id);
   if (
     !creation ||
     creation.status !== "active" ||
@@ -16,6 +16,6 @@ export async function POST(
   ) {
     return NextResponse.json({ ok: false }, { status: 404 });
   }
-  db.incrementDownloads(id);
+  await db.incrementDownloads(id);
   return NextResponse.json({ ok: true });
 }

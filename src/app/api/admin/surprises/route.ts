@@ -40,7 +40,7 @@ export async function GET() {
   if (!(await isAdmin())) {
     return NextResponse.json({ error: "non_autorise" }, { status: 401 });
   }
-  return NextResponse.json(db.listSurprises(false));
+  return NextResponse.json(await db.listSurprises(false));
 }
 
 export async function POST(req: NextRequest) {
@@ -60,10 +60,10 @@ export async function POST(req: NextRequest) {
   const base = slugify(data.title) || "surprise";
   let id = base;
   let suffix = 1;
-  while (db.getSurprise(id)) {
+  while (await db.getSurprise(id)) {
     suffix += 1;
     id = `${base}-${suffix}`;
   }
-  const saved = db.saveSurprise({ id, ...data });
+  const saved = await db.saveSurprise({ id, ...data });
   return NextResponse.json(saved, { status: 201 });
 }

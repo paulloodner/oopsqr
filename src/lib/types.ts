@@ -19,7 +19,7 @@ export interface Creation {
   text: string | null;
   emoji: string | null;
   caption: string | null;
-  imagePath: string | null;
+  imageB64: string | null;
   imageMime: string | null;
   fg: string;
   bg: string;
@@ -38,7 +38,7 @@ export interface NewCreation {
   text: string | null;
   emoji: string | null;
   caption: string | null;
-  imagePath: string | null;
+  imageB64: string | null;
   imageMime: string | null;
   fg: string;
   bg: string;

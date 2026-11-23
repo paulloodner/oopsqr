@@ -14,7 +14,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const creation = db.getCreation(id);
+  const creation = await db.getCreation(id);
   if (!creation || creation.status !== "active") {
     return { title: "Surprise", robots: { index: false, follow: false } };
   }
@@ -31,7 +31,7 @@ export default async function RevealPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const creation = db.getCreation(id);
+  const creation = await db.getCreation(id);
   if (!creation) notFound();
 
   const expired =
@@ -57,7 +57,7 @@ export default async function RevealPage({
     );
   }
 
-  db.incrementView(creation.id);
+  await db.incrementView(creation.id);
 
   const fg = safeColor(creation.fg, "#17151F");
   const bg = safeColor(creation.bg, "#F7F5F0");
@@ -107,7 +107,7 @@ export default async function RevealPage({
               </>
             ) : (
               <>
-                {creation.imagePath ? (
+                {creation.imageB64 ? (
                   <img
                     src={`/api/media/${creation.id}`}
                     alt={creation.caption ?? "Surprise"}

@@ -17,7 +17,7 @@ export default async function CreatePage({
   searchParams: Promise<{ surprise?: string; source?: string; draft?: string }>;
 }) {
   const { surprise, source, draft } = await searchParams;
-  const surprises = db.listSurprises();
+  const surprises = await db.listSurprises();
   const headerStore = await headers();
   const host = headerStore.get("host") ?? "localhost:3000";
   const proto =

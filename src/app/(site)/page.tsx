@@ -8,7 +8,7 @@ import { AdSlot } from "@/components/AdSlot";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const surprises = db.listSurprises().slice(0, 6);
+  const surprises = (await db.listSurprises()).slice(0, 6);
 
   return (
     <main>

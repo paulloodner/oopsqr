@@ -14,6 +14,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "non_autorise" }, { status: 401 });
   }
 
-  const result = db.cleanupExpired();
+  const result = await db.cleanupExpired();
   return NextResponse.json(result);
 }

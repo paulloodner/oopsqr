@@ -8,16 +8,16 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const creation = db.getCreation(id);
+  const creation = await db.getCreation(id);
   if (
     !creation ||
     creation.status !== "active" ||
-    !creation.imagePath ||
+    !creation.imageB64 ||
     new Date(creation.expiresAt).getTime() <= Date.now()
   ) {
     return new NextResponse("Introuvable", { status: 404 });
   }
-  const file = db.readUploadedImage(creation.imagePath);
+  const file = await db.readUploadedImage(id);
   if (!file) return new NextResponse("Introuvable", { status: 404 });
 
   return new NextResponse(new Uint8Array(file.bytes), {

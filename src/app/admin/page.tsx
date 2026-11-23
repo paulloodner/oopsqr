@@ -19,10 +19,10 @@ export const metadata: Metadata = {
 export default async function AdminPage() {
   if (!(await isAdmin())) redirect("/admin/login");
 
-  const stats = db.getStats();
-  const creations = db.listCreations().slice(0, 12);
-  const reports = db.listReports();
-  const surprises = db.listSurprises(false);
+  const stats = await db.getStats();
+  const creations = (await db.listCreations()).slice(0, 12);
+  const reports = await db.listReports();
+  const surprises = await db.listSurprises(false);
 
   const cards = [
     { label: "Créations totales", value: stats.totalCreations },

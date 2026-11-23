@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["better-sqlite3"],
   poweredByHeader: false,
   webpack(config) {
     // Contournement d'un bug Windows/Node de cette machine : webpack appelle

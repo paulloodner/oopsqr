@@ -13,7 +13,7 @@ export async function PATCH(
     return NextResponse.json({ error: "non_autorise" }, { status: 401 });
   }
   const { id } = await params;
-  const existing = db.getSurprise(id);
+  const existing = await db.getSurprise(id);
   if (!existing) {
     return NextResponse.json({ error: "introuvable" }, { status: 404 });
   }
@@ -37,7 +37,7 @@ export async function PATCH(
   if (!next.title || !next.text) {
     return NextResponse.json({ error: "titre_et_texte_requis" }, { status: 400 });
   }
-  return NextResponse.json(db.saveSurprise(next));
+  return NextResponse.json(await db.saveSurprise(next));
 }
 
 export async function DELETE(
@@ -48,6 +48,6 @@ export async function DELETE(
     return NextResponse.json({ error: "non_autorise" }, { status: 401 });
   }
   const { id } = await params;
-  const ok = db.deleteSurprise(id);
+  const ok = await db.deleteSurprise(id);
   return NextResponse.json({ ok }, { status: ok ? 200 : 404 });
 }

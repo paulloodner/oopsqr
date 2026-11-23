@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 
 export async function POST(req: NextRequest) {
-  const rate = db.checkRateLimit(rateKey(req, "create"), 12, 60 * 60 * 1000);
+  const rate = await db.checkRateLimit(rateKey(req, "create"), 12, 60 * 60 * 1000);
   if (!rate.allowed) {
     return NextResponse.json(
       { error: "rate_limited", message: "Trop de créations. Réessaie dans une heure." },
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     ? String(form.get("bg")).toLowerCase()
     : "#f7f5f0";
 
-  let imageBytes: Buffer | null = null;
+  let imageB64: string | null = null;
   let imageMime: string | null = null;
 
   if (type === "image") {
@@ -54,32 +54,29 @@ export async function POST(req: NextRequest) {
     if (!["image/webp", "image/png", "image/jpeg"].includes(mime)) {
       return NextResponse.json({ error: "image_format" }, { status: 400 });
     }
-    imageBytes = Buffer.from(await file.arrayBuffer());
-    if (!hasValidImageMagic(imageBytes, mime)) {
+    const bytes = Buffer.from(await file.arrayBuffer());
+    if (!hasValidImageMagic(bytes, mime)) {
       return NextResponse.json({ error: "image_invalide" }, { status: 400 });
     }
+    imageB64 = bytes.toString("base64");
     imageMime = mime;
   } else if (!text) {
     return NextResponse.json({ error: "texte_requis" }, { status: 400 });
   }
 
-  const id = db.newCreationId();
-  let imagePath: string | null = null;
-  if (imageBytes && imageMime) {
-    imagePath = db.saveUploadedImage(id, imageBytes, imageMime);
-  }
+  const id = await db.newCreationId();
 
   const expiresAt = new Date(
     Date.now() + RETENTION_DAYS * 24 * 60 * 60 * 1000
   ).toISOString();
 
-  db.createCreation({
+  await db.createCreation({
     id,
     type,
     text: type === "text" ? text : null,
     emoji: type === "text" ? emoji || null : null,
     caption: type === "image" ? caption || null : null,
-    imagePath,
+    imageB64,
     imageMime,
     fg,
     bg,
@@ -91,7 +88,7 @@ export async function POST(req: NextRequest) {
   if (now - (store.__oopsqrLastCleanup ?? 0) > 10 * 60 * 1000) {
     store.__oopsqrLastCleanup = now;
     try {
-      db.cleanupExpired();
+      await db.cleanupExpired();
     } catch {
       // ne bloque pas la création si le nettoyage échoue
     }

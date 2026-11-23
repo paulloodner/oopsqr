@@ -11,7 +11,7 @@ import { NextResponse, type NextRequest } from "next/server";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-  const rate = db.checkRateLimit(rateKey(req, "login"), 10, 15 * 60 * 1000);
+  const rate = await db.checkRateLimit(rateKey(req, "login"), 10, 15 * 60 * 1000);
   if (!rate.allowed) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
