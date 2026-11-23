@@ -33,35 +33,77 @@ export const LEGAL = {
     email: "coffigildas268@gmail.com",
   },
 
-  /** À renseigner au déploiement (obligation art. 1-1 II LCEN). */
-  host: null as LegalHost | null,
+  /**
+   * Hébergeur effectif du service (art. 1-1, II, LCEN).
+   * Render Services, Inc. — identité et adresse vérifiées dans les Conditions
+   * générales de Render (version du 10 juillet 2026) et le Data Privacy
+   * Framework (US Department of Commerce).
+   */
+  host: {
+    name: "Render Services, Inc.",
+    address: "525 Brannan Street, Suite 300, San Francisco, CA 94107, États-Unis",
+    website: "https://render.com/",
+  } as LegalHost,
 
   /**
-   * Hébergeurs gratuits vérifiés (nov. 2026) compatibles avec un projet
-   * personnel ; l'identité légale de chacun est prête à être copiée dans `host`.
-   * Voir README §5 pour le comparatif et les limites (usage commercial / pub).
+   * Sous-traitants et partenaires techniques (à publier dans la politique de
+   * confidentialité : hébergement, base de données, régie publicitaire).
+   */
+  partners: [
+    {
+      id: "render",
+      role: "Hébergement de l'application (serveurs, déploiement, TLS)",
+      name: "Render Services, Inc.",
+      address: "525 Brannan Street, Suite 300, San Francisco, CA 94107, États-Unis",
+      website: "https://render.com/",
+    },
+    {
+      id: "neon",
+      role: "Base de données (contenus des QR codes, expiration 14 jours)",
+      name: "Neon Inc.",
+      address: "2088 University Avenue, Palo Alto, CA 94301, États-Unis",
+      website: "https://neon.tech/",
+    },
+    {
+      id: "adsterra",
+      role: "Régie publicitaire (bannières soumises à consentement)",
+      name: "Adsterra (KeepSolid)",
+      address: "Brink House, 1 Customs Street, Kingston, Jamaica",
+      website: "https://www.adsterra.com/",
+    },
+  ] as Array<{
+    id: string;
+    role: string;
+    name: string;
+    address: string;
+    website: string;
+  }>,
+
+  /**
+   * Hébergeurs alternatifs (si changement d'hébergeur) — l'identité légale de
+   * chacun est prête à être recopiée dans `host`.
    */
   hostCandidates: [
+    {
+      id: "render",
+      name: "Render Services, Inc.",
+      address: "525 Brannan Street, Suite 300, San Francisco, CA 94107, États-Unis",
+      website: "https://render.com/",
+      note: "Hébergeur retenu : Web Service Free, compatible usage commercial et publicité.",
+    },
     {
       id: "oracle",
       name: "Oracle Corporation",
       address: "500 Oracle Parkway, Redwood Shores, CA 94065, États-Unis",
       website: "https://www.oracle.com/cloud/",
-      note: "Always Free : VPS persistant, adapté à Node + SQLite.",
+      note: "Always Free : VPS persistant, sans cold-start (alternative à Render).",
     },
     {
       id: "cloudflare",
       name: "Cloudflare, Inc.",
       address: "101 Townsend Street, San Francisco, CA 94107, États-Unis",
       website: "https://www.cloudflare.com/",
-      note: "Pages/Workers : bande passante illimitée ; nécessite d'adapter la persistance.",
-    },
-    {
-      id: "netlify",
-      name: "Netlify, Inc.",
-      address: "44 Montgomery Street, Suite 300, San Francisco, CA 94104, États-Unis",
-      website: "https://www.netlify.com/",
-      note: "Free : 300 crédits/mois ; fonctions serverless, persistance à externaliser.",
+      note: "Workers/Pages : bande passante illimitée ; nécessite d'adapter le runtime.",
     },
     {
       id: "ovh",

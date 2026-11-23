@@ -1,49 +1,60 @@
-/**
- * Statistiques d'affichage des publicités.
- * Sans les variables d'environnement d'AdSense, un emplacement placeholder est
- * rendu : aucune publicité n'est chargée, la page reste intacte.
- */
+"use client";
+
+import { useEffect, useState } from "react";
 
 import { AdsterraSlot } from "@/components/AdsterraSlot";
+import { CONSENT_EVENT, readConsent } from "@/lib/consent";
 
-interface AdSlotProps {
+/**
+ * Emplacements publicitaires.
+ *
+ * Règles :
+ * - rien n'est affiché avant le consentement (ni pub, ni faux placeholder) ;
+ * - si le consentement est refusé, l'emplacement disparaît totalement ;
+ * - priorité AdSense, puis Adsterra (bannière native), sinon rien.
+ */
+export function AdSlot({
+  variant = "footer",
+  className = "",
+}: {
   variant?: "home" | "library" | "editor" | "reveal" | "footer";
   className?: string;
-}
+}) {
+  const [accepted, setAccepted] = useState(false);
 
-export function AdSlot({ variant = "footer", className = "" }: AdSlotProps) {
   const client = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
   const slot = process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOME;
   const adsterraScript = process.env.NEXT_PUBLIC_ADSTERRA_SCRIPT;
   const adsterraContainer = process.env.NEXT_PUBLIC_ADSTERRA_CONTAINER;
 
-  if (!client && !slot && adsterraScript && adsterraContainer) {
-    return <AdsterraSlot className={className} />;
-  }
+  useEffect(() => {
+    const sync = () => setAccepted(readConsent() === "accepted");
+    sync();
+    window.addEventListener(CONSENT_EVENT, sync);
+    return () => window.removeEventListener(CONSENT_EVENT, sync);
+  }, []);
 
-  if (!client || !slot) {
+  if (!accepted) return null;
+
+  if (client && slot) {
     return (
-      <aside
-        className={`ad-slot ${className}`}
-        aria-label="Emplacement publicitaire"
-        data-variant={variant}
-      >
+      <aside className={`ad-slot ${className}`} data-variant={variant}>
         <span className="ad-slot__tag">Publicité</span>
-        <span className="ad-slot__hint">Emplacement réservé — non intrusif</span>
+        <ins
+          className="adsbygoogle"
+          style={{ display: "block" }}
+          data-ad-client={client}
+          data-ad-slot={slot}
+          data-ad-format="auto"
+          data-full-width-responsive="true"
+        />
       </aside>
     );
   }
 
-  return (
-    <aside className={`ad-slot ${className}`} data-variant={variant}>
-      <ins
-        className="adsbygoogle"
-        style={{ display: "block" }}
-        data-ad-client={client}
-        data-ad-slot={slot}
-        data-ad-format="auto"
-        data-full-width-responsive="true"
-      />
-    </aside>
-  );
+  if (adsterraScript && adsterraContainer) {
+    return <AdsterraSlot className={className} />;
+  }
+
+  return null;
 }

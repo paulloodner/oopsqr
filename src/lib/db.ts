@@ -24,6 +24,16 @@ const sql = neon(url ?? "postgres://invalid");
 
 let schemaReady: Promise<void> | null = null;
 
+/**
+ * Postgres plie en minuscules les identifiants non quotés (`createdAt` ->
+ * `createdat`). Les mappers lisent donc les deux écritures
+ * (`row.createdAt ?? row.createdat`) : le code reste valide quel que soit le
+ * pilote utilisé (HTTP, WebSocket ou `pg`).
+ */
+
+/** Intervalle minimal entre deux purges automatiques (24 h). */
+const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
 function ensureSchema(): Promise<void> {
   if (!schemaReady) {
     schemaReady = (async () => {
@@ -73,6 +83,11 @@ function ensureSchema(): Promise<void> {
           count INTEGER NOT NULL DEFAULT 0,
           resetAt BIGINT NOT NULL
         )`;
+      await sql`
+        CREATE TABLE IF NOT EXISTS app_state (
+          key TEXT PRIMARY KEY,
+          val TEXT NOT NULL
+        )`;
 
       const count = await sql`SELECT COUNT(*)::int AS n FROM surprises`;
       if ((count[0] as { n: number }).n === 0) {
@@ -88,6 +103,13 @@ function ensureSchema(): Promise<void> {
   return schemaReady;
 }
 
+/** Conversion défensive vers un ISO : jamais de RangeError sur une page. */
+function iso(value: unknown, fallback = new Date(0).toISOString()): string {
+  if (value === null || value === undefined || value === "") return fallback;
+  const date = value instanceof Date ? value : new Date(String(value));
+  return Number.isNaN(date.getTime()) ? fallback : date.toISOString();
+}
+
 function rowToSurprise(row: any): Surprise {
   return {
     id: row.id,
@@ -98,7 +120,7 @@ function rowToSurprise(row: any): Surprise {
     text: row.text,
     active: Boolean(row.active),
     sort: row.sort,
-    createdAt: new Date(row.createdAt).toISOString(),
+    createdAt: iso(row.createdAt ?? row.createdat),
   };
 }
 
@@ -113,11 +135,11 @@ function rowToCreation(row: any): Creation {
     imageMime: row.imagemime ?? row.imageMime ?? null,
     fg: row.fg,
     bg: row.bg,
-    createdAt: new Date(row.createdAt).toISOString(),
-    expiresAt: new Date(row.expiresAt ?? row.expiresat).toISOString(),
+    createdAt: iso(row.createdAt ?? row.createdat),
+    expiresAt: iso(row.expiresAt ?? row.expiresat),
     views: row.views,
     downloads: row.downloads,
-    reportedAt: row.reportedat ?? row.reportedAt ? new Date(row.reportedat ?? row.reportedAt).toISOString() : null,
+    reportedAt: row.reportedat ?? row.reportedAt ? iso(row.reportedat ?? row.reportedAt) : null,
     reportReason: row.reportreason ?? row.reportReason ?? null,
     status: row.status,
   };
@@ -129,6 +151,7 @@ export const db = {
   /* surprises */
   async listSurprises(onlyActive = true): Promise<Surprise[]> {
     await ensureSchema();
+    await this.cleanupIfDue();
     const rows = onlyActive
       ? await sql`SELECT * FROM surprises WHERE active = TRUE ORDER BY sort ASC, createdAt ASC`
       : await sql`SELECT * FROM surprises ORDER BY sort ASC, createdAt ASC`;
@@ -167,6 +190,7 @@ export const db = {
   /* creations */
   async createCreation(input: NewCreation): Promise<Creation> {
     await ensureSchema();
+    await this.cleanupIfDue();
     await sql`
       INSERT INTO creations (id, type, text, emoji, caption, imageB64, imageMime, fg, bg, createdAt, expiresAt, status)
       VALUES (${input.id}, ${input.type}, ${input.text}, ${input.emoji}, ${input.caption}, ${input.imageB64}, ${input.imageMime}, ${input.fg}, ${input.bg}, now(), ${input.expiresAt}, 'active')`;
@@ -248,6 +272,27 @@ export const db = {
     await sql`DELETE FROM rate_limits WHERE resetAt < ${Date.now() - 24 * 60 * 60 * 1000}`;
     if (expiring.length > 0) await this.recordEvent("cleanup", `${expiring.length} expiration(s)`);
     return { expired: expiring.length, removedFiles: expiring.length, purged: (purge as any).count };
+  },
+
+  /**
+   * Purge automatique quotidienne, déclenchée à la demande par l'activité du
+   * site. Elle remplace un cron externe (hébergeur gratuit sans cron) :
+   * au plus une purge toutes les 24 h, pilotée par `app_state`.
+   */
+  async cleanupIfDue(): Promise<void> {
+    try {
+      await ensureSchema();
+      const rows = (await sql`SELECT val FROM app_state WHERE key = 'last_cleanup'`) as any[];
+      const last = Number(rows[0]?.val ?? 0);
+      const now = Date.now();
+      if (last && now - last < CLEANUP_INTERVAL_MS) return;
+      await this.cleanupExpired();
+      await sql`
+        INSERT INTO app_state (key, val) VALUES ('last_cleanup', ${String(now)})
+        ON CONFLICT (key) DO UPDATE SET val = EXCLUDED.val`;
+    } catch {
+      // la purge automatique ne doit jamais casser une page
+    }
   },
 
   /* events */

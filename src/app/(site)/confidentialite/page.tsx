@@ -72,6 +72,34 @@ export default function PrivacyPage() {
         </section>
 
         <section>
+          <h2 className="text-xl text-midnight">Hébergement, base de données et régie</h2>
+          <p className="mt-2">
+            Le service s&apos;appuie sur trois prestataires techniques, situés
+            hors de l&apos;Union européenne (États-Unis, et Jamaica pour la
+            régie publicitaire), ce qui peut impliquer un transfert de données
+            hors UE :
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            {LEGAL.partners.map((partner) => (
+              <li key={partner.id}>
+                <strong>{partner.name}</strong> — {partner.role}.{" "}
+                <a className="underline" href={partner.website} rel="noreferrer">
+                  {partner.website.replace(/^https?:\/\//, "")}
+                </a>{" "}
+                — {partner.address}.
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2">
+            OOPSQR ne transmet aucune donnée personnelle à la régie publicitaire :
+            le partenaire dépose lui-même ses propres cookies dans votre
+            navigateur, et uniquement après votre acceptation. Les contenus
+            connectés ne sont visibles que par les personnes disposant du lien
+            correspondant.
+          </p>
+        </section>
+
+        <section>
           <h2 className="text-xl text-midnight">Tes droits</h2>
           <p className="mt-2">
             Les contenus n&apos;étant liés à aucune identité, nous ne pouvons pas

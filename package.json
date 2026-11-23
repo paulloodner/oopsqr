@@ -13,7 +13,6 @@
     "jspdf": "^4.2.1",
     "lucide-react": "^1.77.0",
     "next": "16.4.6",
-    "pg": "^8.23.1",
     "qrcode": "^1.5.4",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
@@ -27,7 +26,7 @@
     "tailwindcss": "^4.1.18",
     "typescript": "^5.9.3"
   },
-  "allowScripts": {
-    "better-sqlite3@12.11.1": true
+  "engines": {
+    "node": ">=22.0.0"
   }
 }

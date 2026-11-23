@@ -2,25 +2,23 @@
 
 import { useEffect, useState } from "react";
 
-const KEY = "oopsqr-consent";
+import { readConsent, writeConsent } from "@/lib/consent";
 
 export function ConsentBanner() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     try {
-      if (!window.localStorage.getItem(KEY)) setVisible(true);
+      if (!readConsent()) setVisible(true);
     } catch {
       // stockage indisponible : on n'affiche pas la bannière
     }
   }, []);
 
   function choose(value: "accepted" | "refused") {
-    try {
-      window.localStorage.setItem(KEY, value);
-    } catch {
-      // ignore
-    }
+    // writeConsent enregistre la décision ET notifie les emplacements
+    // publicitaires (activation immédiate, sans rechargement de page).
+    writeConsent(value);
     setVisible(false);
     if (value === "accepted") loadAds();
   }
