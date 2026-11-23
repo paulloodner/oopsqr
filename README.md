@@ -175,6 +175,34 @@ Une fois le domaine obtenu : renseignez `NEXT_PUBLIC_SITE_URL=https://<domaine>`
 (les QR connectés encodent cette origine) et ajoutez le domaine dans le tableau
 de bord de l'hébergeur (DNS + HTTPS automatique).
 
+### 5 quater. Déploiement + publicité (Adsterra native)
+
+**Publicité retenue : Adsterra, format Native Banner** (discret, pas de
+popunder/push). Composant `src/components/AdsterraSlot.tsx`, chargé uniquement
+après consentement (`oopsqr-consent=accepted`). `AdSlot` choisit : AdSense si
+configuré, sinon Adsterra si configuré, sinon placeholder.
+
+Variables : `NEXT_PUBLIC_ADSTERRA_SCRIPT` (src complet du `invoke.js`) et
+`NEXT_PUBLIC_ADSTERRA_CONTAINER` (id du div). Obtenues dans le dashboard
+Adsterra → Websites → add website → format **Native Banner** (le site doit être
+en ligne et vérifié).
+
+**⚠️ Vercel Hobby interdit l'usage commercial / la publicité.** Pour monétiser :
+- **Vercel Pro** (20 $/mois) — reste sur Vercel ; ou
+- **hébergeur Node gratuit autorisant la pub** : Oracle Cloud Always Free (VPS,
+  sans cold-start), Render free (cold-starts), Koyeb free. Depuis la migration
+  Neon, l'app n'a plus besoin de disque local → tout hébergeur Node convient.
+
+**Authentifier le CLI Vercel** (le navigateur connecté ne suffit pas) :
+- soit `vercel login` puis valider dans le navigateur ;
+- soit créer un token : Vercel → Account Settings → Tokens → Create Token
+  (scope *Full Account*), puis `vercel deploy --prod --token=<TOKEN>`.
+Le token n'est affiché qu'une fois : le copier immédiatement.
+
+Environnements à poser sur l'hébergeur : `DATABASE_URL` (Neon),
+`ADMIN_PASSWORD`, `ADMIN_SECRET`, `CRON_SECRET`, `NEXT_PUBLIC_SITE_URL`,
+et les variables pub (`NEXT_PUBLIC_ADSTERRA_*`).
+
 ---
 
 ## 6. Structure

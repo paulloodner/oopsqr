@@ -4,6 +4,8 @@
  * rendu : aucune publicité n'est chargée, la page reste intacte.
  */
 
+import { AdsterraSlot } from "@/components/AdsterraSlot";
+
 interface AdSlotProps {
   variant?: "home" | "library" | "editor" | "reveal" | "footer";
   className?: string;
@@ -12,6 +14,12 @@ interface AdSlotProps {
 export function AdSlot({ variant = "footer", className = "" }: AdSlotProps) {
   const client = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
   const slot = process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOME;
+  const adsterraScript = process.env.NEXT_PUBLIC_ADSTERRA_SCRIPT;
+  const adsterraContainer = process.env.NEXT_PUBLIC_ADSTERRA_CONTAINER;
+
+  if (!client && !slot && adsterraScript && adsterraContainer) {
+    return <AdsterraSlot className={className} />;
+  }
 
   if (!client || !slot) {
     return (
