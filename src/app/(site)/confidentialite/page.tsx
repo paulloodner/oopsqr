@@ -1,0 +1,98 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { LEGAL } from "@/lib/legal";
+
+export const metadata: Metadata = {
+  title: "Confidentialité",
+  description:
+    "Comment OOPSQR limite la collecte de données : pas de compte, contenus 14 jours, publicités avec consentement.",
+};
+
+export default function PrivacyPage() {
+  return (
+    <main className="mx-auto max-w-3xl px-4 py-12">
+      <p className="font-display text-xs font-extrabold uppercase tracking-[0.18em] text-violet-deep">
+        Vie privée
+      </p>
+      <h1 className="mt-2 text-4xl md:text-5xl">Confidentialité</h1>
+      <p className="mt-3 text-sm text-midnight/45">Dernière mise à jour : novembre 2026</p>
+
+      <div className="mt-8 space-y-7 text-sm leading-relaxed text-midnight/70">
+        <section>
+          <h2 className="text-xl text-midnight">Le principe : collecter le minimum</h2>
+          <p className="mt-2">
+            Créer un QR code ne demande ni compte, ni email, ni numéro de téléphone.
+            Nous ne cherchons pas à identifier les personnes qui scannent. Les
+            statistiques affichées sont anonymisées (nombre de scans, téléchargements
+            et créations).
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-xl text-midnight">Contenus et conservation</h2>
+          <p className="mt-2">
+            Les contenus connectés (texte, emoji, légende, image) sont stockés sur
+            notre infrastructure cloud pendant <strong>14 jours</strong>. À l&apos;expiration,
+            le contenu et les fichiers associés sont supprimés et le lien de révélation
+            devient invalide. Les métadonnées techniques nécessaires à la gestion
+            peuvent être conservées jusqu&apos;à 30 jours après expiration, puis purgées.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-xl text-midnight">Données techniques</h2>
+          <p className="mt-2">
+            Pour lutter contre les abus, un identifiant technique dérivé de
+            l&apos;adresse IP (haché et tronqué) peut être utilisé de façon temporaire
+            pour limiter le nombre de créations. Aucune adresse IP brute n&apos;est
+            enregistrée dans la base de contenus. Aucune donnée n&apos;est revendue.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-xl text-midnight">Cookies et publicité</h2>
+          <p className="mt-2">
+            Sans consentement, seuls des cookies strictement nécessaires au
+            fonctionnement (préférence de consentement, session administrateur) sont
+            utilisés. Les emplacements publicitaires sont discrets et placés après le
+            contenu de révélation. Si tu acceptes la publicité, le fournisseur
+            publicitaire peut déposer des cookies de mesure ou de personnalisation.
+            Tu peux refuser : le service reste entièrement fonctionnel.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-xl text-midnight">Sécurité et signalements</h2>
+          <p className="mt-2">
+            Les fichiers importés sont contrôlés (format, type réel, taille) et les
+            textes assainis. Les contenus manifestement abusifs peuvent être retirés
+            après signalement. Un lien de signalement est présent sur chaque page de
+            révélation.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-xl text-midnight">Tes droits</h2>
+          <p className="mt-2">
+            Les contenus n&apos;étant liés à aucune identité, nous ne pouvons pas
+            retrouver une création à partir d&apos;une personne. Pour toute question
+            relative aux données personnelles :{" "}
+            <a className="underline" href={`mailto:${LEGAL.contactEmail}`}>
+              {LEGAL.contactEmail}
+            </a>
+            .
+          </p>
+        </section>
+      </div>
+
+      <div className="mt-10 flex gap-3">
+        <Link href="/mentions-legales" className="btn btn-secondary btn-sm">
+          Mentions légales
+        </Link>
+        <Link href="/creer" className="btn btn-primary btn-sm">
+          Créer un QR
+        </Link>
+      </div>
+    </main>
+  );
+}

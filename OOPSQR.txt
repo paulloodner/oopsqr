@@ -1,0 +1,703 @@
+# CAHIER DES CHARGES COMPLET
+## Plateforme web de création de QR Codes surprises et humoristiques
+
+**Version :** 1.0 — Spécifications fonctionnelles et techniques  
+**Type de projet :** Application web légère  
+**Modèle économique :** Gratuit avec publicité  
+**Accès :** Sans inscription et sans compte utilisateur  
+**Conservation des contenus :** 14 jours
+
+---
+
+# 1. Présentation du projet
+
+## 1.1. Concept
+
+Le projet consiste à développer une plateforme web permettant à n'importe quel utilisateur de créer gratuitement des QR Codes personnalisés qui révèlent un contenu humoristique, surprenant ou personnel après leur scan.
+
+L'utilisateur peut choisir un contenu parmi une bibliothèque de propositions prédéfinies, importer sa propre image ou rédiger son propre message.
+
+Il peut ensuite personnaliser l'apparence de son QR Code, ajouter une icône, un logo ou un texte d'accompagnement, puis télécharger le résultat sous forme de fichier imprimable.
+
+Le QR Code permet à une autre personne de découvrir le contenu associé en le scannant avec son smartphone.
+
+## 1.2. Objectifs principaux
+
+- Rendre la création d'un QR Code accessible à tous.
+- Permettre une création en quelques clics.
+- Ne demander aucune inscription.
+- Ne nécessiter aucune application supplémentaire.
+- Proposer des contenus prédéfinis et personnalisables.
+- Permettre une utilisation avec ou sans connexion Internet, selon les capacités du format choisi.
+- Générer des QR Codes esthétiques et imprimables.
+- Générer du trafic organique grâce aux réseaux sociaux, notamment TikTok.
+- Financer le service par la publicité sans dégrader l'expérience utilisateur.
+
+# 2. Architecture générale du produit
+
+La plateforme repose sur quatre grands espaces fonctionnels.
+
+1. **Accueil :** présentation du service et accès rapide à la création.
+2. **Créateur :** sélection du contenu, personnalisation et génération.
+3. **Bibliothèque :** propositions de surprises prêtes à utiliser.
+4. **Révélation :** page affichant le contenu associé à un QR Code connecté.
+
+Le système doit rester léger, rapide et utilisable sur ordinateur comme sur smartphone.
+
+# 3. Fonctionnalités principales
+
+## 3.1. Accueil
+
+La page d'accueil doit immédiatement expliquer le fonctionnement du service.
+
+Éléments attendus :
+
+- Logo et identité visuelle.
+- Titre accrocheur.
+- Courte explication du concept.
+- Bouton principal « Créer mon QR Code ».
+- Accès à la bibliothèque de surprises.
+- Présentation des différentes possibilités.
+- Quelques exemples de QR Codes.
+- Explication du fonctionnement en trois étapes.
+- Footer avec informations légales et confidentialité.
+
+L'utilisateur doit pouvoir commencer à créer sans avoir besoin de créer un compte.
+
+## 3.2. Bibliothèque de surprises
+
+Une bibliothèque de contenus prédéfinis doit être disponible dès le lancement.
+
+Catégories envisagées :
+
+- Blagues Wi-Fi.
+- Messages humoristiques.
+- Fausses promesses.
+- Messages provocateurs.
+- Images humoristiques.
+- Mèmes.
+- Messages personnalisés.
+- Surprises et révélations.
+
+Chaque proposition possède :
+
+- Un titre.
+- Une courte description.
+- Une miniature ou un aperçu.
+- Un bouton de sélection.
+
+Les contenus doivent être administrables sans intervention technique dans le code de l'application.
+
+## 3.3. Création de contenu personnalisé
+
+L'utilisateur doit pouvoir choisir entre deux méthodes.
+
+**A. Importer une image**
+
+Formats acceptés :
+- JPG / JPEG.
+- PNG.
+- WebP.
+
+Fonctionnalités :
+- Sélection d'une image depuis l'appareil.
+- Prévisualisation.
+- Recadrage.
+- Redimensionnement automatique.
+- Compression automatique.
+- Vérification du poids et des dimensions.
+- Conversion vers un format optimisé.
+
+Une image initialement lourde, par exemple 1 Mo, doit être traitée automatiquement sans obliger l'utilisateur à utiliser un logiciel externe.
+
+**B. Rédiger un message**
+
+L'utilisateur peut saisir librement son texte.
+
+Fonctionnalités :
+- Champ de saisie.
+- Prévisualisation du message.
+- Gestion des retours à la ligne.
+- Choix de la mise en forme.
+- Limite de caractères adaptée au mode de génération.
+
+## 3.4. Personnalisation du QR Code
+
+La personnalisation doit permettre de créer un QR Code reconnaissable et esthétique.
+
+Options :
+
+- Couleur des modules.
+- Couleur de l'arrière-plan.
+- Forme des modules lorsque le moteur le permet.
+- Coins et motifs de positionnement.
+- Icône ou logo central.
+- Texte au-dessus du QR Code.
+- Texte sous le QR Code.
+- Taille et position du texte.
+- Modèles graphiques prédéfinis.
+
+Exemples de textes :
+
+- SCANNE POUR LE WIFI.
+- WIFI GRATUIT ICI.
+- UNE SURPRISE T'ATTEND.
+- SCANNE-MOI.
+- TU NE DEVINERAS JAMAIS.
+
+Une prévisualisation en temps réel doit être disponible.
+
+Le moteur doit vérifier le contraste, la zone de silence et la correction d'erreur afin de préserver la lisibilité du QR Code.
+
+# 4. Système de génération QR Code
+
+La plateforme doit proposer deux modes de génération.
+
+## 4.1. Mode connecté
+
+Ce mode utilise une URL unique associée au contenu.
+
+Exemple :
+
+https://nomdusite.com/s/8Kx92P
+
+Fonctionnement :
+
+1. L'utilisateur crée son contenu.
+2. Le serveur ou le système de stockage lui attribue un identifiant aléatoire.
+3. Le contenu est enregistré dans le stockage Cloud.
+4. Une URL publique est créée.
+5. Le QR Code encode cette URL.
+6. Le QR Code est prêt à être téléchargé.
+
+Au scan, le navigateur ouvre une page de révélation affichant le contenu.
+
+Fonctionnalités disponibles :
+- Texte.
+- Images.
+- GIF, si pris en charge.
+- Mise en page personnalisée.
+- Animations légères.
+- Statistiques anonymisées de consultation.
+
+## 4.2. Mode hors ligne
+
+Ce mode doit permettre de révéler un contenu sans accès à Internet.
+
+Principe : les données sont directement encodées dans le QR Code, sans dépendance à un serveur externe.
+
+Formats envisageables :
+- Texte brut.
+- Petits contenus binaires.
+- Images extrêmement compressées, sous réserve de compatibilité avec les lecteurs QR.
+
+**Contrainte technique majeure :**
+
+Un QR Code standard peut contenir au maximum environ 2 953 octets en mode binaire avec une correction d'erreur faible. La capacité réelle exploitable sera souvent inférieure.
+
+De plus, les lecteurs QR natifs ne garantissent pas l'affichage d'une image encodée dans les données.
+
+Le mode hors ligne doit donc respecter deux exigences :
+
+1. Garantir la lecture et la révélation du texte brut sur les lecteurs compatibles.
+2. Soumettre l'affichage des images encodées à des tests réels sur Android et iOS avant de l'intégrer comme fonctionnalité garantie.
+
+Il ne faut pas utiliser une simple URL hébergée en Cloud pour prétendre proposer un fonctionnement hors ligne.
+
+## 4.3. Gestion intelligente de la génération
+
+Le système doit automatiquement :
+
+- Vérifier le contenu.
+- Vérifier la taille des données.
+- Optimiser les images.
+- Choisir les paramètres de génération.
+- Vérifier que le contenu tient dans la capacité disponible.
+- Générer le QR Code.
+- Contrôler sa lisibilité technique.
+
+Si le contenu dépasse les limites, l'utilisateur reçoit une indication claire et une proposition d'optimisation.
+
+Aucun QR Code invalide ne doit être présenté comme prêt à l'emploi.
+
+# 5. Compression et optimisation des images
+
+La compression doit être entièrement transparente pour l'utilisateur.
+
+## 5.1. Traitement automatique
+
+Lorsqu'un utilisateur importe une image :
+
+1. Lecture des dimensions et du poids.
+2. Vérification du format.
+3. Suppression des métadonnées inutiles.
+4. Redimensionnement si nécessaire.
+5. Conversion vers un format adapté.
+6. Compression progressive.
+7. Vérification du résultat.
+8. Utilisation de la version optimisée pour la génération.
+
+## 5.2. Stratégie de compression
+
+Le système doit privilégier la qualité visuelle plutôt que la réduction extrême du poids.
+
+Pour le mode connecté :
+- Images WebP optimisées.
+- Dimensions adaptées aux écrans mobiles.
+- Compression avec conservation du rendu.
+- Possibilité de conserver une version originale temporaire si nécessaire.
+
+Pour le mode hors ligne :
+- Compression beaucoup plus agressive.
+- Réduction des dimensions.
+- Quantification des couleurs.
+- Encodage binaire si le format le permet.
+- Contrôle strict de la capacité maximale du QR Code.
+
+Le système doit comparer plusieurs niveaux de compression et sélectionner le meilleur résultat techniquement exploitable.
+
+## 5.3. Limites et messages utilisateur
+
+L'utilisateur ne doit pas être confronté à des erreurs techniques complexes.
+
+Exemples :
+
+- « Optimisation de votre image… »
+- « Votre contenu est prêt. »
+- « Cette image est trop complexe pour le mode hors ligne. »
+- « Essayez une image plus petite ou utilisez le mode connecté. »
+
+# 6. Téléchargement et exportation
+
+Le QR Code final doit pouvoir être téléchargé dans plusieurs formats.
+
+**PNG**
+- Image haute résolution.
+- Adaptée au partage numérique.
+- Impression simple.
+
+**SVG**
+- Format vectoriel.
+- Adapté aux impressions de grande taille.
+- Conservation de la netteté.
+
+**PDF**
+- Document prêt à imprimer.
+- Format A4.
+- Marges maîtrisées.
+- QR Code correctement dimensionné.
+- Texte d'accompagnement.
+- Possibilité d'utiliser différents modèles de présentation.
+
+Le système doit également proposer quelques formats d'affiches prédéfinis.
+
+Exemples :
+- Petite étiquette.
+- Affiche A5.
+- Affiche A4.
+- Format carré pour les réseaux sociaux.
+
+# 7. Hébergement et conservation des contenus
+
+## 7.1. Stockage Cloud
+
+Les images et les contenus nécessaires au mode connecté doivent être hébergés sur un stockage Cloud.
+
+Objectifs :
+- Éviter de stocker les images directement sur le serveur applicatif.
+- Réduire les coûts.
+- Optimiser les temps de chargement.
+- Profiter des possibilités de compression et de diffusion du fournisseur.
+
+Le choix du fournisseur doit privilégier une offre gratuite ou un quota gratuit suffisant pour le lancement.
+
+Les quotas, restrictions et conditions de l'offre devront être vérifiés avant le déploiement. La gratuité permanente ne doit pas être considérée comme garantie.
+
+## 7.2. Durée de conservation
+
+Tous les contenus générés en mode connecté doivent être conservés pendant 14 jours.
+
+À l'expiration :
+- Suppression du contenu.
+- Suppression des fichiers associés.
+- Invalidation du lien de révélation.
+- Nettoyage des métadonnées devenues inutiles.
+
+Le nettoyage doit être automatisé.
+
+Le système doit éviter de supprimer un contenu avant l'expiration de sa période de conservation.
+
+## 7.3. Gestion des identifiants
+
+Chaque création doit disposer d'un identifiant unique, aléatoire et difficile à deviner.
+
+Aucune donnée personnelle ne doit être nécessaire pour créer un contenu.
+
+# 8. Page de révélation
+
+La page de révélation est l'une des parties les plus importantes du produit.
+
+C'est elle que découvrira la personne qui scanne le QR Code connecté.
+
+Elle doit être :
+
+- Très rapide.
+- Adaptée aux smartphones.
+- Minimaliste.
+- Sans inscription.
+- Sans téléchargement d'application.
+- Sans publicité avant l'affichage de la surprise.
+
+Le contenu doit être affiché immédiatement.
+
+Éléments possibles :
+- Image centrale.
+- Message humoristique.
+- Mise en page personnalisée.
+- Animation légère.
+- Effet de révélation facultatif.
+
+En cas de contenu expiré, afficher une page explicative plutôt qu'une erreur technique.
+
+# 9. Monétisation publicitaire
+
+Le service est gratuit pour tous les utilisateurs.
+
+La monétisation repose principalement sur les impressions publicitaires.
+
+## 9.1. Emplacements publicitaires
+
+**Page d'accueil**
+- Une zone publicitaire discrète.
+- Éventuellement un emplacement secondaire.
+
+**Bibliothèque**
+- Publicité intégrée entre certaines propositions.
+- Aucun blocage de navigation.
+
+**Éditeur**
+- Une zone publicitaire non intrusive.
+- Aucun élément publicitaire superposé aux commandes.
+
+**Page de révélation**
+- Aucune publicité avant la surprise.
+- Éventuellement, une publicité discrète après le contenu, si elle ne perturbe pas l'expérience.
+
+## 9.2. Principes à respecter
+
+- Pas de pop-up agressif.
+- Pas de redirection automatique.
+- Pas de publicité obligatoire avant le téléchargement.
+- Pas de publicité obligatoire avant la révélation.
+- Pas de fausse notification.
+- Pas de multiplication excessive des emplacements.
+
+Le service doit rester agréable même lorsque la publicité est présente.
+
+Le système publicitaire devra respecter les règles du fournisseur choisi et les exigences applicables en matière de consentement et de confidentialité.
+
+# 10. Expérience utilisateur et interface
+
+## 10.1. Principes de conception
+
+La plateforme doit avoir une interface moderne, ludique et immédiatement compréhensible.
+
+L'utilisateur ne doit pas avoir besoin de tutoriel pour créer son premier QR Code.
+
+Principes :
+- Navigation simple.
+- Interface responsive.
+- Peu de texte.
+- Boutons clairement identifiés.
+- Prévisualisation immédiate.
+- Étapes de création courtes.
+- Chargement rapide.
+
+## 10.2. Parcours utilisateur
+
+Le parcours idéal :
+
+Accueil → Créer → Choisir un contenu → Personnaliser → Générer → Télécharger.
+
+Aucune création de compte ne doit interrompre ce parcours.
+
+# 11. Sécurité et protection contre les abus
+
+La plateforme doit prévoir :
+
+- Validation des fichiers importés.
+- Vérification réelle du type MIME.
+- Limitation de la taille des fichiers.
+- Protection contre les fichiers malveillants.
+- Identifiants aléatoires.
+- Protection contre les soumissions automatisées abusives.
+- Limitation du nombre de générations par adresse IP ou mécanisme équivalent, sans collecte excessive.
+- Protection contre les tentatives de surcharge.
+- Validation et assainissement des textes.
+- Protection contre les injections HTML et JavaScript.
+- Mécanisme de signalement des contenus.
+
+Les contenus générés ne doivent pas servir à imiter frauduleusement des pages de connexion, voler des identifiants ou distribuer des logiciels malveillants.
+
+Les données techniques collectées doivent être limitées au strict nécessaire.
+
+# 12. Architecture technique envisagée
+
+L'application doit être construite avec une architecture légère, maintenable et économique.
+
+## 12.1. Frontend
+
+Technologies envisageables :
+- React.
+- Next.js.
+- TypeScript.
+- Tailwind CSS.
+
+Responsabilités :
+- Interface utilisateur.
+- Bibliothèque.
+- Éditeur.
+- Prévisualisation.
+- Compression côté client lorsque possible.
+- Génération et personnalisation du QR Code.
+- Exportation des fichiers.
+
+## 12.2. Backend
+
+Responsabilités :
+- Gestion des créations connectées.
+- Attribution des identifiants.
+- Enregistrement des métadonnées.
+- Génération des URL publiques.
+- Gestion des expirations.
+- Nettoyage automatique.
+- Protection contre les abus.
+
+## 12.3. Stockage
+
+Utilisation d'un stockage Cloud avec offre gratuite adaptée au lancement.
+
+Les images doivent être compressées avant leur transfert lorsque cela est possible.
+
+Le stockage doit être séparé de la logique applicative.
+
+## 12.4. Base de données
+
+Chaque contenu connecté peut comporter :
+
+- Identifiant.
+- Type de contenu.
+- Chemin du fichier ou texte associé.
+- Date de création.
+- Date d'expiration.
+- Statut.
+- Informations minimales nécessaires à la gestion.
+
+Aucun profil utilisateur n'est nécessaire.
+
+## 12.5. Bibliothèques techniques
+
+Des bibliothèques spécialisées pourront être utilisées pour :
+
+- Génération QR Code.
+- Correction d'erreur.
+- Personnalisation graphique.
+- Compression d'images.
+- Conversion WebP.
+- Export PDF.
+- Génération SVG et PNG.
+
+Le choix définitif devra privilégier des bibliothèques maintenues, documentées et compatibles avec les licences du projet.
+
+# 13. Administration et gestion des contenus prédéfinis
+
+Même sans compte utilisateur, un espace d'administration privé est recommandé.
+
+Fonctionnalités :
+- Ajouter une surprise.
+- Modifier une proposition.
+- Supprimer une proposition.
+- Organiser les catégories.
+- Importer des images.
+- Gérer les modèles graphiques.
+- Consulter les statistiques globales.
+- Surveiller l'utilisation du stockage.
+- Consulter les erreurs de génération.
+- Gérer les signalements.
+
+L'administration doit être protégée et totalement séparée de l'interface publique.
+
+# 14. Statistiques et suivi
+
+Des statistiques anonymisées pourront être utilisées pour comprendre l'utilisation du service.
+
+Indicateurs :
+- Nombre de créations.
+- Nombre de téléchargements.
+- Nombre de scans connectés.
+- Types de contenus les plus utilisés.
+- Formats les plus téléchargés.
+- Répartition des modes connectés et hors ligne.
+- Consommation du stockage.
+- Taux d'erreurs de génération.
+
+Aucune collecte inutile de données personnelles.
+
+# 15. Stratégie de lancement : TikTok
+
+TikTok sera le principal canal de découverte du service au lancement.
+
+## 15.1. Concept des vidéos
+
+Produire de courtes vidéos qui montrent des QR Codes installés dans des contextes humoristiques.
+
+Exemples :
+- Faux Wi-Fi gratuit.
+- QR Code annonçant un cadeau.
+- Message inattendu.
+- Surprise entre amis.
+- QR Code placé sur une affiche humoristique.
+
+## 15.2. Structure des vidéos
+
+1. Présenter le QR Code.
+2. Montrer le scan.
+3. Révéler la surprise.
+4. Montrer la réaction dans un contexte respectueux de la vie privée.
+5. Présenter brièvement le site.
+
+Appel à l'action :
+
+« Tu veux faire la même blague ? Crée ton QR Code gratuitement sur notre site. »
+
+## 15.3. Objectif
+
+Chaque vidéo doit démontrer une utilisation concrète du service et inciter les spectateurs à créer leur propre QR Code.
+
+# 16. Périmètre de la première version (MVP)
+
+La première version doit rester concentrée sur les fonctions essentielles.
+
+Fonctionnalités indispensables :
+
+- Page d'accueil.
+- Bibliothèque de surprises.
+- Création de messages personnalisés.
+- Importation d'images.
+- Compression automatique.
+- Personnalisation QR Code.
+- Mode connecté.
+- Mode hors ligne avec texte brut.
+- Étude et test de faisabilité des images hors ligne.
+- Export PNG.
+- Export PDF.
+- Export SVG.
+- Page de révélation.
+- Conservation de 14 jours.
+- Nettoyage automatique.
+- Publicités discrètes.
+- Interface responsive.
+
+Les fonctions secondaires comme les animations complexes, les statistiques avancées et les modèles graphiques supplémentaires pourront être ajoutées progressivement.
+
+# 17. Planning de réalisation
+
+Objectif : obtenir une première version fonctionnelle en 48 heures.
+
+## Jour 1 — Construction du produit
+
+**Phase 1 : Structure**
+- Initialisation du projet.
+- Configuration frontend et backend.
+- Mise en place du stockage.
+- Création de la base de données.
+
+**Phase 2 : Interface**
+- Page d'accueil.
+- Bibliothèque.
+- Éditeur.
+- Prévisualisation du QR Code.
+
+**Phase 3 : Génération**
+- Création des QR Codes.
+- Personnalisation.
+- Compression automatique.
+- Export PNG et SVG.
+
+## Jour 2 — Finalisation
+
+**Phase 4 : Fonctionnement**
+- Mode connecté.
+- Page de révélation.
+- Stockage des images.
+- Gestion des identifiants.
+- Expiration automatique.
+
+**Phase 5 : Mode hors ligne**
+- Encodage des messages.
+- Tests de lecture.
+- Étude d'encodage des images.
+- Tests de compatibilité.
+
+**Phase 6 : Finalisation**
+- Export PDF.
+- Optimisation mobile.
+- Intégration publicitaire.
+- Sécurité.
+- Tests complets.
+- Mise en ligne.
+
+Le délai de 48 heures constitue un objectif de prototype/MVP. La compatibilité universelle des images hors ligne et la validation de tous les mécanismes de sécurité nécessiteront des tests complémentaires.
+
+# 18. Critères de validation
+
+La première version sera considérée comme fonctionnelle lorsque :
+
+1. Un visiteur peut accéder au service sans compte.
+2. Il peut sélectionner un contenu prédéfini.
+3. Il peut saisir son propre message.
+4. Il peut importer une image.
+5. L'image est optimisée automatiquement.
+6. Il peut personnaliser son QR Code.
+7. Il peut télécharger un PNG, un SVG et un PDF.
+8. Un QR Code connecté ouvre le bon contenu.
+9. Un QR Code texte hors ligne révèle le message sans Internet.
+10. Les contenus connectés expirent après 14 jours.
+11. Les fichiers expirés sont supprimés automatiquement.
+12. La page de révélation fonctionne sur mobile.
+13. La publicité ne bloque pas les fonctionnalités principales.
+14. Les QR Codes restent lisibles après personnalisation.
+
+# 19. Vision à moyen terme
+
+Après validation du MVP, plusieurs évolutions pourront être envisagées :
+
+- Bibliothèque communautaire de surprises.
+- Nouveaux modèles de QR Codes.
+- Création d'affiches prêtes à imprimer.
+- QR Codes pour anniversaires et événements.
+- Messages secrets.
+- Jeux de piste.
+- Statistiques de scans améliorées.
+- Animations et effets de révélation.
+- Partage direct sur les réseaux sociaux.
+
+---
+
+# 20. Philosophie fondamentale du projet
+
+Le produit doit respecter cinq principes :
+
+**Simplicité :** créer un QR Code doit prendre quelques secondes.
+
+**Accessibilité :** aucune inscription et aucune application supplémentaire.
+
+**Liberté :** l'utilisateur peut choisir une surprise prédéfinie ou créer son propre contenu.
+
+**Fiabilité :** le QR Code doit fonctionner comme annoncé, avec des limites techniques clairement gérées.
+
+**Monétisation discrète :** les publicités financent le service sans détruire l'expérience.
+
+L'objectif n'est pas de créer un générateur QR Code parmi des milliers d'autres, mais de créer une plateforme amusante, facile à utiliser et suffisamment intéressante pour que les utilisateurs aient envie de la partager.
+
+**Le produit doit être aussi simple à utiliser que la blague qu'il permet de créer.**
