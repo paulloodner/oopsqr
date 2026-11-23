@@ -1,12 +1,20 @@
 # OOPSQR
 
+> **En production** : <https://oopsqr.onrender.com> — Render Free (plan `Free`,
+> région Frankfurt) · Neon Postgres (plan Free, Francfort) · dépôt GitHub
+> `paulloodner/oopsqr` · déploiement automatique désactivé (repo public connecté
+> par URL : chaque push demande un *Manual Deploy* depuis le dashboard Render).
+
 Plateforme web gratuite de création de **QR codes surprises** : une blague, un faux
 Wi‑Fi, un message secret ou une image cachés derrière un QR code. Sans compte,
 sans application, avec publicités discrètes et contenus connectés conservés
 **14 jours**.
 
 - Stack : Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 ·
-  SQLite (`better-sqlite3`) · `qrcode` · `jsPDF` · `lucide-react`.
+  **Neon Postgres** (`@neondatabase/serverless`) · `qrcode` · `jsPDF` ·
+  `lucide-react`.
+- Déploiement : Render Free (Web Service) · Base : Neon Free · Publicité :
+  Adsterra Native Banner (consent-gated).
 - Cahier des charges : [`OOPSQR.txt`](./OOPSQR.txt) · Identité : [`TYPOGRAPHIE.txt`](./TYPOGRAPHIE.txt).
 
 ---
