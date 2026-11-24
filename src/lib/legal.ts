@@ -23,14 +23,18 @@ export interface LegalHost {
 }
 
 export const LEGAL = {
-  contactEmail: "coffigildas268@gmail.com",
+  contactEmail: "paulloodner@gmail.com",
   lastUpdated: "novembre 2026",
 
   editor: {
     kind: "particulier-non-professionnel" as const,
     anonymous: false,
-    name: "COFFI Gildas Loîc Paulin",
-    email: "coffigildas268@gmail.com",
+    name: "Paul Paulin",
+    email: "paulloodner@gmail.com",
+    /** Numéro de téléphone / WhatsApp published pour les notifications. */
+    phone: "+229 01 65 24 06 54",
+    /** Pays de résidence (domicile) — art. 1-1, I, LCEN. */
+    domicile: "Bénin",
   },
 
   /**

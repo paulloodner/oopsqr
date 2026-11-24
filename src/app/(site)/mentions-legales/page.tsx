@@ -36,6 +36,10 @@ export default function LegalPage() {
             <a className="underline" href={`mailto:${LEGAL.editor.email}`}>
               {LEGAL.editor.email}
             </a>
+            {" — "}
+            <a className="underline" href={`https://wa.me/2290165240654`}>
+              WhatsApp {LEGAL.editor.phone}
+            </a>
             . Toute demande relative à un contenu, à un droit de propriété
             intellectuelle ou à une réclamation peut être adressée à cette adresse ;
             l&apos;éditeur y répond et, le cas échéant, saisit l&apos;hébergeur ou

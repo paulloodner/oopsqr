@@ -121,15 +121,15 @@ curl -X POST https://votre-domaine/api/cleanup \
    hébergeurs au système de fichiers éphémère (Vercel, Render Free…).
 2. **Secrets** : définir `ADMIN_PASSWORD`, `ADMIN_SECRET`, `CRON_SECRET`.
 3. **Mentions légales / hébergeur** : tout est piloté par `src/lib/legal.ts`.
-   L'éditeur est renseigné : **COFFI Gildas Loîc Paulin**,
-   `coffigildas268@gmail.com`, personne physique à titre non professionnel
-   (LCEN art. 1-1, rédaction loi SREN du 21 mai 2024). L'hébergeur est
-   renseigné : **Render Services, Inc., 525 Brannan Street, Suite 300,
+   L'éditeur est renseigné : **Paul Paulin**, `paulloodner@gmail.com`,
+   téléphone/WhatsApp `+229 01 65 24 06 54`, personne physique à titre non
+   professionnel (LCEN art. 1-1, rédaction loi SREN du 21 mai 2024). L'hébergeur
+   est renseigné : **Render Services, Inc., 525 Brannan Street, Suite 300,
    San Francisco, CA 94107, USA**. Les partenaires (Render, Neon, Adsterra)
    sont publiés dans la politique de confidentialité (`LEGAL.partners`).
    ⚠️ Si le service devient **professionnel** (publicités rémunérées, vente,
-   contrepartie économique), ajouter domicile + téléphone + immatriculation
-   le cas échéant (art. 1-1 I).
+   contrepartie économique), ajouter l'immatriculation le cas échéant
+   (art. 1-1 I).
 4. **Publicité** : consent-gated (`src/lib/consent.ts` + `ConsentBanner`).
    Aucun emplacement n'est rendu avant acceptation ; un refus masque
    définitivement les emplacements. Variables : `NEXT_PUBLIC_ADSTERRA_SCRIPT`
