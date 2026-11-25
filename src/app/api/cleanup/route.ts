@@ -1,10 +1,14 @@
 import { db } from "@/lib/db";
 import { isAdmin } from "@/lib/admin-auth";
+import { hasSameOrigin } from "@/lib/request";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
+  if (!hasSameOrigin(req)) {
+    return NextResponse.json({ error: "origine_invalide" }, { status: 403 });
+  }
   const cronSecret = process.env.CRON_SECRET;
   const authorization = req.headers.get("authorization") ?? "";
   const validCron = Boolean(cronSecret) && authorization === `Bearer ${cronSecret}`;

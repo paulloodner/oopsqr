@@ -22,6 +22,19 @@ export function publicOrigin(req: NextRequest | Request): string {
   }
 }
 
+/**
+ * Garde CSRF pour les actions mutatives (admin, écritures).
+ * Les navigateurs envoient Origin sur les POST/PATCH/DELETE ; un Origin
+ * différent de l'origine publique est rejeté. L'absence d'Origin est acceptée
+ * pour les clients non navigateurs (cron, curl) — le cookie SameSite=lax
+ * bloque déjà les envois cross-site côté navigateur.
+ */
+export function hasSameOrigin(req: NextRequest | Request): boolean {
+  const origin = req.headers.get("origin");
+  if (!origin) return true;
+  return origin.replace(/\/$/, "") === publicOrigin(req);
+}
+
 export function hasValidImageMagic(bytes: Buffer, mime: string): boolean {
   if (mime === "image/webp") {
     return (

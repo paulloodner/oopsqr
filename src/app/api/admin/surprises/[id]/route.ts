@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { isAdmin } from "@/lib/admin-auth";
+import { hasSameOrigin } from "@/lib/request";
 import { sanitizeEmoji, sanitizeLine, sanitizeText } from "@/lib/validation";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -11,6 +12,9 @@ export async function PATCH(
 ) {
   if (!(await isAdmin())) {
     return NextResponse.json({ error: "non_autorise" }, { status: 401 });
+  }
+  if (!hasSameOrigin(req)) {
+    return NextResponse.json({ error: "origine_invalide" }, { status: 403 });
   }
   const { id } = await params;
   const existing = await db.getSurprise(id);
@@ -41,11 +45,14 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   if (!(await isAdmin())) {
     return NextResponse.json({ error: "non_autorise" }, { status: 401 });
+  }
+  if (!hasSameOrigin(req)) {
+    return NextResponse.json({ error: "origine_invalide" }, { status: 403 });
   }
   const { id } = await params;
   const ok = await db.deleteSurprise(id);

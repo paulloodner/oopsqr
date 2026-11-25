@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { isAdmin } from "@/lib/admin-auth";
+import { hasSameOrigin } from "@/lib/request";
 import { sanitizeEmoji, sanitizeLine, sanitizeText } from "@/lib/validation";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -46,6 +47,9 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   if (!(await isAdmin())) {
     return NextResponse.json({ error: "non_autorise" }, { status: 401 });
+  }
+  if (!hasSameOrigin(req)) {
+    return NextResponse.json({ error: "origine_invalide" }, { status: 403 });
   }
   let body: SurprisePayload;
   try {

@@ -5,12 +5,15 @@ import {
   signAdminToken,
 } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
-import { rateKey } from "@/lib/request";
+import { hasSameOrigin, rateKey } from "@/lib/request";
 import { NextResponse, type NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
+  if (!hasSameOrigin(req)) {
+    return NextResponse.json({ error: "origine_invalide" }, { status: 403 });
+  }
   const rate = await db.checkRateLimit(rateKey(req, "login"), 10, 15 * 60 * 1000);
   if (!rate.allowed) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
