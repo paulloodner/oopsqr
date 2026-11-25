@@ -2,17 +2,24 @@
 
 import { useEffect, useState } from "react";
 
-import { readConsent, writeConsent } from "@/lib/consent";
+import { CONSENT_EVENT, readConsent, writeConsent } from "@/lib/consent";
 
 export function ConsentBanner() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    try {
-      if (!readConsent()) setVisible(true);
-    } catch {
-      // stockage indisponible : on n'affiche pas la bannière
-    }
+    const sync = () => {
+      try {
+        // Réaffiche le bandeau si le choix est retiré (bouton « Préférences
+        // publicitaires » du pied de page), le masque dès qu'un choix existe.
+        setVisible(!readConsent());
+      } catch {
+        // stockage indisponible : on n'affiche pas la bannière
+      }
+    };
+    sync();
+    window.addEventListener(CONSENT_EVENT, sync);
+    return () => window.removeEventListener(CONSENT_EVENT, sync);
   }, []);
 
   function choose(value: "accepted" | "refused") {

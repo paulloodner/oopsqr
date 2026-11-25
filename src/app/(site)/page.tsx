@@ -178,7 +178,7 @@ export default async function HomePage() {
               {
                 Icon: Sparkles,
                 title: "14 jours, pas plus",
-                text: "Les contenus connectés expirent et sont supprimés automatiquement. Aucune donnée personnelle.",
+                text: "Les contenus connectés expirent et sont supprimés automatiquement. Aucun compte, aucune identité demandée.",
               },
               {
                 Icon: Download,

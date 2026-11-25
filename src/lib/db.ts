@@ -99,8 +99,23 @@ function ensureSchema(): Promise<void> {
         }
       }
     })();
+    // Ne jamais figer l'instance sur une erreur transitoire (cold start, base
+    // Neon suspendue) : la prochaine requête retentera l'initialisation.
+    schemaReady.catch(() => {
+      schemaReady = null;
+    });
   }
   return schemaReady;
+}
+
+/**
+ * Nombre de lignes affectées par un UPDATE/DELETE.
+ * Neon (driver serverless) expose `rowCount`, le driver pg expose `count`.
+ * Sans ce helper, les méthodes renvoyaient `false` même après un succès.
+ */
+function affected(res: unknown): number {
+  const r = res as { rowCount?: number; count?: number } | null;
+  return Number(r?.rowCount ?? r?.count ?? 0);
 }
 
 /** Conversion défensive vers un ISO : jamais de RangeError sur une page. */
@@ -184,7 +199,7 @@ export const db = {
   async deleteSurprise(id: string): Promise<boolean> {
     await ensureSchema();
     const res = await sql`DELETE FROM surprises WHERE id = ${id}`;
-    return (res as any).count > 0;
+    return affected(res) > 0;
   },
 
   /* creations */
@@ -215,7 +230,7 @@ export const db = {
     const res = await sql`
       UPDATE creations SET reportedAt = now(), reportReason = ${reason}
       WHERE id = ${id} AND reportedAt IS NULL`;
-    return (res as any).count > 0;
+    return affected(res) > 0;
   },
   async listCreations(status?: string): Promise<Creation[]> {
     await ensureSchema();
@@ -232,12 +247,12 @@ export const db = {
   async clearReport(id: string): Promise<boolean> {
     await ensureSchema();
     const res = await sql`UPDATE creations SET reportedAt = NULL, reportReason = NULL WHERE id = ${id}`;
-    return (res as any).count > 0;
+    return affected(res) > 0;
   },
   async deleteCreation(id: string): Promise<boolean> {
     await ensureSchema();
     const res = await sql`DELETE FROM creations WHERE id = ${id}`;
-    return (res as any).count > 0;
+    return affected(res) > 0;
   },
   async newCreationId(): Promise<string> {
     for (let i = 0; i < 6; i += 1) {
@@ -265,7 +280,14 @@ export const db = {
     const expiring = (await sql`
       SELECT id FROM creations WHERE status = 'active' AND expiresAt <= now()`) as any[];
     for (const row of expiring) {
-      await sql`UPDATE creations SET status = 'expired', imageB64 = NULL WHERE id = ${row.id}`;
+      // Suppression PHYSIQUE du contenu à J+14 (promesse publique) : texte,
+      // emoji, légende et image sont effacés. Seules les métadonnées
+      // techniques (id, dates, compteurs) subsistent jusqu'à la purge à J+44.
+      await sql`
+        UPDATE creations
+        SET status = 'expired', imageB64 = NULL, imageMime = NULL,
+            text = NULL, emoji = NULL, caption = NULL
+        WHERE id = ${row.id}`;
     }
     const purge = await sql`
       DELETE FROM creations WHERE status = 'expired' AND expiresAt <= now() - INTERVAL '30 days'`;

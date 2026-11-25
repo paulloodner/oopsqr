@@ -74,6 +74,13 @@ export const LEGAL = {
       website: "https://neon.tech/",
     },
     {
+      id: "google-fonts",
+      role: "Polices de caractères (Google Fonts, chargées au premier affichage des pages)",
+      name: "Google LLC",
+      address: "1600 Amphitheatre Parkway, Mountain View, CA 94043, États-Unis",
+      website: "https://fonts.google.com/",
+    },
+    {
       id: "adsterra",
       role: "Régie publicitaire (bannières soumises à consentement)",
       name: "Adsterra (KeepSolid)",

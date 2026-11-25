@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LEGAL } from "@/lib/legal";
+import { ConsentPreferences } from "@/components/ConsentPreferences";
 
 export function SiteFooter() {
   return (
@@ -54,6 +55,9 @@ export function SiteFooter() {
             </li>
             <li>
               <Link href="/confidentialite">Confidentialité</Link>
+            </li>
+            <li>
+              <ConsentPreferences />
             </li>
             <li>
               <a href={`mailto:${LEGAL.contactEmail}`}>Contact</a>

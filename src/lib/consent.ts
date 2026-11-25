@@ -21,6 +21,23 @@ export function readConsent(): ConsentValue | null {
   }
 }
 
+/**
+ * Retrait du consentement (droit RGPD : le refus/retrait doit être aussi
+ * simple que l'acceptation). Efface la décision stockée et notifie les
+ * emplacements : le bandeau réapparaît et les pubs disparaissent.
+ */
+export function resetConsent(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(CONSENT_KEY);
+  } catch {
+    // stockage indisponible : l'événement suffit pour la session
+  }
+  window.dispatchEvent(
+    new CustomEvent(CONSENT_EVENT, { detail: { consent: null } })
+  );
+}
+
 export function writeConsent(value: ConsentValue): void {
   if (typeof window === "undefined") return;
   try {

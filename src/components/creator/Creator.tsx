@@ -1005,8 +1005,8 @@ export function Creator({
             )
           ) : (
             <div className="mt-3 rounded-xl bg-lime/25 p-3 text-xs text-midnight/70">
-              Aucune donnée ne quitte ton appareil : le texte est encodé directement
-              dans le QR code.
+              Hors ligne, ton texte n&apos;est jamais envoyé : il est encodé
+              directement dans le QR code, sur ton appareil.
             </div>
           )}
 

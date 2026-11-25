@@ -33,9 +33,13 @@ export default function PrivacyPage() {
           <p className="mt-2">
             Les contenus connectés (texte, emoji, légende, image) sont stockés sur
             notre infrastructure cloud pendant <strong>14 jours</strong>. À l&apos;expiration,
-            le contenu et les fichiers associés sont supprimés et le lien de révélation
-            devient invalide. Les métadonnées techniques nécessaires à la gestion
-            peuvent être conservées jusqu&apos;à 30 jours après expiration, puis purgées.
+            le contenu (texte, emoji, légende, image) est <strong>physiquement effacé
+            de la base de données</strong> et le lien de révélation devient invalide.
+            Seules les métadonnées techniques nécessaires à la gestion (identifiant,
+            dates, compteurs) peuvent être conservées jusqu&apos;à 30 jours après
+            expiration, puis purgées. La purge est déclenchée par l&apos;activité du
+            site (au moins une fois par 24 h) et peut aussi être lancée manuellement
+            depuis l&apos;espace d&apos;administration.
           </p>
         </section>
 
@@ -52,12 +56,18 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-xl text-midnight">Cookies et publicité</h2>
           <p className="mt-2">
-            Sans consentement, seuls des cookies strictement nécessaires au
-            fonctionnement (préférence de consentement, session administrateur) sont
-            utilisés. Les emplacements publicitaires sont discrets et placés après le
-            contenu de révélation. Si tu acceptes la publicité, le fournisseur
-            publicitaire peut déposer des cookies de mesure ou de personnalisation.
-            Tu peux refuser : le service reste entièrement fonctionnel.
+            Sans consentement, seul le cookie de session administrateur est
+            utilisé ; ton choix publicitaire est conservé dans le
+            <strong> stockage local de ton navigateur</strong> (clé
+            <code>oopsqr-consent</code> en <code>localStorage</code>, ce n&apos;est
+            pas un cookie). Les emplacements publicitaires sont discrets et placés
+            après le contenu de révélation. Si tu acceptes la publicité, le
+            fournisseur publicitaire peut déposer des cookies de mesure ou de
+            personnalisation. Tu peux refuser : le service reste entièrement
+            fonctionnel. Tu peux aussi <strong>modifier ou retirer ton choix à tout
+            moment</strong> via « Préférences publicitaires » dans le pied de page :
+            le bandeau de consentement réapparaît et, en cas de refus, les
+            emplacements publicitaires disparaissent.
           </p>
         </section>
 
@@ -74,10 +84,12 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-xl text-midnight">Hébergement, base de données et régie</h2>
           <p className="mt-2">
-            Le service s&apos;appuie sur trois prestataires techniques, situés
+            Le service s&apos;appuie sur des prestataires techniques situés
             hors de l&apos;Union européenne (États-Unis, et Jamaica pour la
             régie publicitaire), ce qui peut impliquer un transfert de données
-            hors UE :
+            hors UE. Les polices Google Fonts sont chargées au premier affichage,
+            avant tout choix publicitaire ; les autres services tiers publicitaires
+            ne sont contactés qu&apos;après acceptation :
           </p>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             {LEGAL.partners.map((partner) => (
