@@ -110,10 +110,12 @@ function ensureSchema(): Promise<void> {
 
 /**
  * Nombre de lignes affectées par un UPDATE/DELETE.
- * Neon (driver serverless) expose `rowCount`, le driver pg expose `count`.
- * Sans ce helper, les méthodes renvoyaient `false` même après un succès.
+ * Le driver HTTP de Neon renvoie par défaut UN TABLEAU de lignes (vide sans
+ * RETURNING), sans `rowCount` exploitable ; `pg` expose `rowCount`/`count`.
+ * Les requêtes de mutation ajoutent donc `RETURNING id` et on compte les lignes.
  */
 function affected(res: unknown): number {
+  if (Array.isArray(res)) return res.length;
   const r = res as { rowCount?: number; count?: number } | null;
   return Number(r?.rowCount ?? r?.count ?? 0);
 }
@@ -198,7 +200,7 @@ export const db = {
   },
   async deleteSurprise(id: string): Promise<boolean> {
     await ensureSchema();
-    const res = await sql`DELETE FROM surprises WHERE id = ${id}`;
+    const res = await sql`DELETE FROM surprises WHERE id = ${id} RETURNING id`;
     return affected(res) > 0;
   },
 
@@ -229,7 +231,7 @@ export const db = {
     await ensureSchema();
     const res = await sql`
       UPDATE creations SET reportedAt = now(), reportReason = ${reason}
-      WHERE id = ${id} AND reportedAt IS NULL`;
+      WHERE id = ${id} AND reportedAt IS NULL RETURNING id`;
     return affected(res) > 0;
   },
   async listCreations(status?: string): Promise<Creation[]> {
@@ -246,12 +248,12 @@ export const db = {
   },
   async clearReport(id: string): Promise<boolean> {
     await ensureSchema();
-    const res = await sql`UPDATE creations SET reportedAt = NULL, reportReason = NULL WHERE id = ${id}`;
+    const res = await sql`UPDATE creations SET reportedAt = NULL, reportReason = NULL WHERE id = ${id} RETURNING id`;
     return affected(res) > 0;
   },
   async deleteCreation(id: string): Promise<boolean> {
     await ensureSchema();
-    const res = await sql`DELETE FROM creations WHERE id = ${id}`;
+    const res = await sql`DELETE FROM creations WHERE id = ${id} RETURNING id`;
     return affected(res) > 0;
   },
   async newCreationId(): Promise<string> {
@@ -290,12 +292,10 @@ export const db = {
         WHERE id = ${row.id}`;
     }
     const purge = await sql`
-      DELETE FROM creations WHERE status = 'expired' AND expiresAt <= now() - INTERVAL '30 days'`;
+      DELETE FROM creations WHERE status = 'expired' AND expiresAt <= now() - INTERVAL '30 days' RETURNING id`;
     await sql`DELETE FROM rate_limits WHERE resetAt < ${Date.now() - 24 * 60 * 60 * 1000}`;
     if (expiring.length > 0) await this.recordEvent("cleanup", `${expiring.length} expiration(s)`);
-    // Neon (driver serverless) expose `rowCount`, le driver pg expose `count`.
-    const purged = Number((purge as any).rowCount ?? (purge as any).count ?? 0);
-    return { expired: expiring.length, removedFiles: expiring.length, purged };
+    return { expired: expiring.length, removedFiles: expiring.length, purged: affected(purge) };
   },
 
   /**
