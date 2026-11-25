@@ -271,7 +271,9 @@ export const db = {
       DELETE FROM creations WHERE status = 'expired' AND expiresAt <= now() - INTERVAL '30 days'`;
     await sql`DELETE FROM rate_limits WHERE resetAt < ${Date.now() - 24 * 60 * 60 * 1000}`;
     if (expiring.length > 0) await this.recordEvent("cleanup", `${expiring.length} expiration(s)`);
-    return { expired: expiring.length, removedFiles: expiring.length, purged: (purge as any).count };
+    // Neon (driver serverless) expose `rowCount`, le driver pg expose `count`.
+    const purged = Number((purge as any).rowCount ?? (purge as any).count ?? 0);
+    return { expired: expiring.length, removedFiles: expiring.length, purged };
   },
 
   /**
