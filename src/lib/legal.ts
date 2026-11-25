@@ -4,15 +4,19 @@
  * Cadre : loi n° 2004-575 du 21 juin 2004 (LCEN), art. 1-1 et 1-2,
  * dans sa rédaction issue de la loi SREN n° 2024-449 du 21 mai 2024.
  *
- * - Éditeur : personne physique NOMMÉE éditant à titre NON PROFESSIONNEL
- *   (art. 1-1 LCEN). Nom + email publiés ; directeur de publication = éditeur.
+ * - Éditeur : personne physique NOMMÉE, non anonyme (art. 1-1 LCEN). Le service
+ *   est GRATUIT pour les utilisateurs et financé par la publicité (régie
+ *   Adsterra, bannières soumises à consentement). Nom, email, téléphone /
+ *   WhatsApp et pays de résidence sont publiés ; directeur de publication =
+ *   éditeur.
  * - Hébergeur : OBLIGATOIREMENT publié (nom/dénomination + adresse, art. 1-1).
  *   Renseigner `host` avant toute mise en ligne publique. Tant qu'il est null,
  *   la page affiche un avis honnête.
  *
- * ⚠️ Si le service devient professionnel (contrepartie économique, publicités
- * rémunérées, vente…), compléter l'identification (domicile, téléphone,
- * immatriculation le cas échéant) conformément à l'art. 1-1 I.
+ * ⚠️ Le service étant financé par des publicités rémunérées, les coordonnées
+ *   de l'éditeur sont publiées (email + téléphone + pays). Si l'activité
+ *   devient une véritable activité PROFESSIONNELLE, compléter avec l'adresse
+ *   postale du domicile et l'immatriculation le cas échéant (art. 1-1, I).
  */
 
 export interface LegalHost {
@@ -27,11 +31,12 @@ export const LEGAL = {
   lastUpdated: "novembre 2026",
 
   editor: {
-    kind: "particulier-non-professionnel" as const,
+    /** Personne physique, identité publique (service gratuit financé par la pub). */
+    kind: "particulier" as const,
     anonymous: false,
     name: "Paul Paulin",
     email: "paulloodner@gmail.com",
-    /** Numéro de téléphone / WhatsApp published pour les notifications. */
+    /** Téléphone / WhatsApp publié pour les notifications (art. 1-1, I, LCEN). */
     phone: "+229 01 65 24 06 54",
     /** Pays de résidence (domicile) — art. 1-1, I, LCEN. */
     domicile: "Bénin",

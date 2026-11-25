@@ -26,10 +26,13 @@ export default function LegalPage() {
           <h2 className="text-xl text-midnight">Éditeur du site</h2>
           <p className="mt-2">
             Le service OOPSQR est édité par{" "}
-            <strong>{LEGAL.editor.name}</strong>, personne physique éditant à titre{" "}
-            <strong>non professionnel</strong>, conformément à la loi n° 2004-575 du
-            21 juin 2004 pour la confiance dans l&apos;économie numérique (LCEN),
-            article 1-1, dans sa rédaction issue de la loi n° 2024-449 du 21 mai 2024.
+            <strong>{LEGAL.editor.name}</strong>, personne physique établie au{" "}
+            <strong>{LEGAL.editor.domicile}</strong>. Le service est gratuit pour
+            les utilisateurs et financé par des emplacements publicitaires soumis
+            à consentement (régie Adsterra). L&apos;identification de l&apos;éditeur
+            est publiée conformément à la loi n° 2004-575 du 21 juin 2004 pour la
+            confiance dans l&apos;économie numérique (LCEN), article 1-1, dans sa
+            rédaction issue de la loi n° 2024-449 du 21 mai 2024.
           </p>
           <p className="mt-2">
             Contact et notification :{" "}
