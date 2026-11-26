@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { AdSenseSlot } from "@/components/AdSenseSlot";
 import { AdsterraSlot } from "@/components/AdsterraSlot";
 import { CONSENT_EVENT, readConsent } from "@/lib/consent";
 
@@ -37,19 +38,7 @@ export function AdSlot({
   if (!accepted) return null;
 
   if (client && slot) {
-    return (
-      <aside className={`ad-slot ${className}`} data-variant={variant}>
-        <span className="ad-slot__tag">Publicité</span>
-        <ins
-          className="adsbygoogle"
-          style={{ display: "block" }}
-          data-ad-client={client}
-          data-ad-slot={slot}
-          data-ad-format="auto"
-          data-full-width-responsive="true"
-        />
-      </aside>
-    );
+    return <AdSenseSlot client={client} slot={slot} variant={variant} className={className} />;
   }
 
   if (adsterraScript && adsterraContainer) {

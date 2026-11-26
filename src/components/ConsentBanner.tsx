@@ -25,21 +25,10 @@ export function ConsentBanner() {
   function choose(value: "accepted" | "refused") {
     // writeConsent enregistre la décision ET notifie les emplacements
     // publicitaires (activation immédiate, sans rechargement de page).
+    // Le chargement des scripts est délégué à AdSenseSlot / AdsterraSlot, qui
+    // gèrent aussi le cas d'un consentement donné lors d'une visite précédente.
     writeConsent(value);
     setVisible(false);
-    if (value === "accepted") loadAds();
-  }
-
-  function loadAds() {
-    const client = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
-    if (!client) return;
-    if (document.querySelector("script[data-oopsqr-ads]")) return;
-    const script = document.createElement("script");
-    script.async = true;
-    script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${client}`;
-    script.crossOrigin = "anonymous";
-    script.dataset.oopsqrAds = "true";
-    document.head.appendChild(script);
   }
 
   if (!visible) return null;
