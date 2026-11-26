@@ -40,7 +40,7 @@ export function SiteFooter() {
               <Link href="/#comment">Comment ça marche</Link>
             </li>
             <li>
-              <Link href="/creer">Mode hors ligne</Link>
+              <Link href="/creer?mode=offline&source=text">Mode hors ligne</Link>
             </li>
           </ul>
         </div>
@@ -71,7 +71,7 @@ export function SiteFooter() {
         </div>
       </div>
 
-      <div className="mx-auto mt-8 flex max-w-6xl flex-col gap-2 border-t border-cream/10 pt-5 text-xs text-cream/35 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mx-auto mt-8 flex max-w-6xl flex-col gap-2 border-t border-cream/10 pt-5 text-xs text-cream/50 sm:flex-row sm:items-center sm:justify-between">
         <p>© {new Date().getFullYear()} OOPSQR. Fait avec malice.</p>
         <p>
           Contenus connectés conservés 14 jours · Aucune donnée personnelle demandée.

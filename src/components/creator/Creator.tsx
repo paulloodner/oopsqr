@@ -42,6 +42,7 @@ interface CreatorProps {
   surprises: Surprise[];
   initialSurpriseId?: string;
   initialSource?: "library" | "text" | "image";
+  initialMode?: Mode;
   draftRequested?: boolean;
   siteUrl: string;
 }
@@ -63,10 +64,11 @@ export function Creator({
   surprises,
   initialSurpriseId,
   initialSource = "library",
+  initialMode = "connected",
   draftRequested = false,
   siteUrl,
 }: CreatorProps) {
-  const [mode, setMode] = useState<Mode>("connected");
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [source, setSource] = useState<Source>(initialSource);
   const [selectedId, setSelectedId] = useState<string | null>(
     initialSurpriseId && surprises.some((s) => s.id === initialSurpriseId)
@@ -176,7 +178,12 @@ export function Creator({
   const isImage = mode === "connected" && source === "image" && image !== null;
   const contentText = source === "library" ? selected?.text ?? "" : text;
   const contentEmoji = source === "library" ? selected?.emoji ?? "🎁" : emoji;
-  const hasContent = isImage || contentText.trim().length > 0;
+  // En mode « Mon image », seule une image importée autorise la génération :
+  // un ancien texte saisi dans l'autre onglet ne doit JAMAIS être publié.
+  const hasContent =
+    mode === "connected" && source === "image"
+      ? image !== null
+      : contentText.trim().length > 0;
 
   const signature = Signature([
     mode,
@@ -382,6 +389,8 @@ export function Creator({
     return `oopsqr-${created?.id ?? "hors-ligne"}.${extension}`;
   }
 
+  const [exporting, setExporting] = useState(false);
+
   async function withExport(action: () => Promise<unknown> | unknown) {
     if (!ready) {
       setError("Génère d'abord ton QR code.");
@@ -391,6 +400,10 @@ export function Creator({
       setError(contrastError);
       return;
     }
+    // Empêche les doubles clics : un export lourd ne doit pas être relancé
+    // pendant qu'un autre est en cours (les boutons sont aussi désactivés).
+    if (exporting) return;
+    setExporting(true);
     try {
       await action();
       setToast("Téléchargement lancé !");
@@ -403,6 +416,8 @@ export function Creator({
           ? "Le contenu dépasse la capacité du QR code."
           : "Le téléchargement a échoué."
       );
+    } finally {
+      setExporting(false);
     }
   }
 
@@ -469,6 +484,7 @@ export function Creator({
             <button
               type="button"
               data-active={source === "library"}
+              aria-pressed={source === "library"}
               onClick={() => changeSource("library")}
             >
               Bibliothèque
@@ -476,6 +492,7 @@ export function Creator({
             <button
               type="button"
               data-active={source === "text"}
+              aria-pressed={source === "text"}
               onClick={() => changeSource("text")}
             >
               Mon texte
@@ -483,6 +500,7 @@ export function Creator({
             <button
               type="button"
               data-active={source === "image"}
+              aria-pressed={source === "image"}
               onClick={() => changeSource("image")}
               disabled={mode === "offline"}
               title={mode === "offline" ? "Le mode hors ligne accepte uniquement du texte" : ""}
@@ -497,11 +515,13 @@ export function Creator({
                 <input
                   className="input"
                   placeholder="Rechercher une surprise…"
+                  aria-label="Rechercher une surprise"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                 />
                 <select
                   className="input sm:w-56"
+                  aria-label="Filtrer par catégorie"
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                 >
@@ -520,6 +540,7 @@ export function Creator({
                       invalidate();
                     }}
                     className={`surprise-option ${selectedId === s.id ? "surprise-option--active" : ""}`}
+                    aria-pressed={selectedId === s.id}
                   >
                     <span className="text-2xl">{s.emoji}</span>
                     <span className="min-w-0">
@@ -540,12 +561,15 @@ export function Creator({
           {source === "text" && (
             <div className="mt-4 space-y-3">
               <div className="flex items-end justify-between gap-3">
-                <label className="field-label mb-0">Ton message</label>
+                <label className="field-label mb-0" htmlFor="creator-text">
+                  Ton message
+                </label>
                 <span className="text-xs text-midnight/45">
                   {text.length} / {MAX_TEXT}
                 </span>
               </div>
               <textarea
+                id="creator-text"
                 className="textarea"
                 rows={6}
                 value={text}
@@ -568,6 +592,8 @@ export function Creator({
                         invalidate();
                       }}
                       className={`emoji-chip ${emoji === em ? "emoji-chip--active" : ""}`}
+                      aria-pressed={emoji === em}
+                      aria-label={`Emoji ${em}`}
                     >
                       {em}
                     </button>
@@ -1014,7 +1040,11 @@ export function Creator({
             </div>
           )}
 
-          {error && <p className="alert alert--error mt-2">{error}</p>}
+          {error && (
+            <p className="alert alert--error mt-2" role="alert">
+              {error}
+            </p>
+          )}
 
           <div className="mt-4 space-y-2">
             <div>
@@ -1040,20 +1070,20 @@ export function Creator({
                 ))}
               </select>
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2" aria-busy={exporting}>
               <button
                 type="button"
                 className="btn btn-primary btn-sm"
-                disabled={!ready}
+                disabled={!ready || exporting}
                 onClick={() => withExport(() => exportPng(qrInput, fileName("png"), 2200))}
               >
                 <Download size={14} />
-                PNG
+                {exporting ? "Export…" : "PNG"}
               </button>
               <button
                 type="button"
                 className="btn btn-secondary btn-sm"
-                disabled={!ready}
+                disabled={!ready || exporting}
                 onClick={() => withExport(() => exportSvg(qrInput, fileName("svg")))}
               >
                 <Palette size={14} />
@@ -1062,7 +1092,7 @@ export function Creator({
               <button
                 type="button"
                 className="btn btn-secondary btn-sm"
-                disabled={!ready}
+                disabled={!ready || exporting}
                 onClick={() =>
                   withExport(() =>
                     exportPdf(qrInput, preset, fileName("pdf"), origin.replace(/^https?:\/\//, ""))

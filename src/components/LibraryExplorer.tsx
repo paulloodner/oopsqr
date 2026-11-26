@@ -47,6 +47,9 @@ export function LibraryExplorer({
     );
   }, [surprises, category, query]);
 
+  // Carte ayant ouvert l'aperçu : le focus y est restitué à la fermeture.
+  const triggerRef = useRef<HTMLElement | null>(null);
+
   function random() {
     if (filtered.length === 0) return;
     setPreview(filtered[Math.floor(Math.random() * filtered.length)]);
@@ -94,6 +97,7 @@ export function LibraryExplorer({
     return () => {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener("keydown", onKeyDown);
+      triggerRef.current?.focus();
     };
   }, [preview]);
 
@@ -115,7 +119,12 @@ export function LibraryExplorer({
               aria-label="Rechercher une surprise"
             />
           </div>
-          <button type="button" onClick={random} className="btn btn-violet btn-sm whitespace-nowrap">
+          <button
+            type="button"
+            onClick={random}
+            disabled={filtered.length === 0}
+            className="btn btn-violet btn-sm whitespace-nowrap"
+          >
             <Dices size={16} />
             Surprise aléatoire
           </button>
@@ -126,6 +135,7 @@ export function LibraryExplorer({
             type="button"
             onClick={() => chooseCategory(null)}
             className={`category-chip ${category === null ? "category-chip--active" : ""}`}
+            aria-pressed={category === null}
           >
             <Layers size={14} />
             Toutes
@@ -140,6 +150,7 @@ export function LibraryExplorer({
                 type="button"
                 onClick={() => chooseCategory(item)}
                 className={`category-chip ${category === item ? "category-chip--active" : ""}`}
+                aria-pressed={category === item}
               >
                 <Icon size={14} />
                 {item}
@@ -150,7 +161,7 @@ export function LibraryExplorer({
         </div>
       </div>
 
-      <p className="mt-4 text-xs font-semibold text-midnight/40">
+      <p className="mt-4 text-xs font-semibold text-midnight/55">
         {filtered.length} surprise{filtered.length > 1 ? "s" : ""}
         {category ? ` dans « ${category} »` : ""}
         {query ? ` pour « ${query} »` : ""}
@@ -161,9 +172,20 @@ export function LibraryExplorer({
           const { Icon, bg, fg, tint } = styleFor(surprise.category);
           return (
             <div key={surprise.id} className="contents">
-              <button
-                type="button"
-                onClick={() => setPreview(surprise)}
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={(event) => {
+                  triggerRef.current = event.currentTarget;
+                  setPreview(surprise);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    triggerRef.current = event.currentTarget;
+                    setPreview(surprise);
+                  }
+                }}
                 className="library-card group text-left"
                 style={{ background: tint }}
               >
@@ -179,7 +201,7 @@ export function LibraryExplorer({
                   </span>
                 </div>
                 <h3 className="mt-3 text-lg leading-tight">{surprise.title}</h3>
-                <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-midnight/50">
+                <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-midnight/60">
                   {surprise.description}
                 </p>
                 <div className="mt-3 rounded-xl bg-white/75 p-2.5">
@@ -188,12 +210,12 @@ export function LibraryExplorer({
                   </p>
                 </div>
                 <div className="mt-3 flex items-center justify-between text-[0.7rem] font-bold">
-                  <span className="text-midnight/40">Aperçu rapide</span>
+                  <span className="text-midnight/55">Aperçu rapide</span>
                   <span className="inline-flex items-center gap-1 text-violet-deep">
                     Utiliser <ArrowRight size={13} />
                   </span>
                 </div>
-              </button>
+              </div>
               {index === 5 && filtered.length > 6 && (
                 <div className="sm:col-span-2 lg:col-span-3">
                   <AdSlot variant="library" />

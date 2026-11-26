@@ -35,9 +35,33 @@ export function ImageCropper({ file, onCancel, onComplete }: ImageCropperProps) 
     setUrl(objectUrl);
     const img = new Image();
     img.onload = () => setNatural({ width: img.naturalWidth, height: img.naturalHeight });
+    // Sans ce gestionnaire, un fichier illisible laissait le bouton désactivé
+    // sans aucune explication pour l'utilisateur.
+    img.onerror = () => setError("Impossible de lire ce fichier image.");
     img.src = objectUrl;
     return () => URL.revokeObjectURL(objectUrl);
   }, [file]);
+
+  const cancelRef = useRef(onCancel);
+  cancelRef.current = onCancel;
+
+  // Ouverture : focus dans la zone de cadrage, Échap pour fermer, scroll
+  // arrière-plan verrouillé, focus restitué à la fermeture.
+  useEffect(() => {
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    viewportRef.current?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") cancelRef.current();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKey);
+      previouslyFocused?.focus?.();
+    };
+  }, []);
 
   useEffect(() => {
     const measure = () => {
@@ -78,11 +102,30 @@ export function ImageCropper({ file, onCancel, onComplete }: ImageCropperProps) 
   };
 
   const changeZoom = (next: number) => {
+    // Re-borne le déplacement avec les maxima du NOUVEAU zoom : sinon un
+    // dézoom après un déplacement au bord produisait un cadrage hors image.
+    const nextMaxX = Math.max(0, (baseW * next - viewport) / 2);
+    const nextMaxY = Math.max(0, (baseH * next - viewport) / 2);
     setZoom(next);
-    setOffset((o) => {
-      const factor = 1.0001;
-      return { x: o.x / factor, y: o.y / factor };
-    });
+    setOffset((o) => ({
+      x: Math.max(-nextMaxX, Math.min(nextMaxX, o.x)),
+      y: Math.max(-nextMaxY, Math.min(nextMaxY, o.y)),
+    }));
+  };
+
+  // Déplacement au clavier (équivalent du glisser-déposer pointer).
+  const onViewportKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const step = e.shiftKey ? 40 : 10;
+    const moves: Record<string, [number, number]> = {
+      ArrowLeft: [step, 0],
+      ArrowRight: [-step, 0],
+      ArrowUp: [0, step],
+      ArrowDown: [0, -step],
+    };
+    const move = moves[e.key];
+    if (!move) return;
+    e.preventDefault();
+    setOffset((o) => clamp(o.x + move[0], o.y + move[1]));
   };
 
   const validate = useCallback(async () => {
@@ -139,12 +182,12 @@ export function ImageCropper({ file, onCancel, onComplete }: ImageCropperProps) 
 
   return (
     <div
-      className="fixed inset-0 z-[90] flex items-center justify-center bg-midnight/80 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-midnight/80 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-label="Recadrer l'image"
     >
-      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-midnight-2 p-5 text-cream shadow-2xl">
+      <div className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-3xl border border-white/10 bg-midnight-2 p-5 text-cream shadow-2xl">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-display text-xl font-extrabold">Recadrer l&apos;image</h2>
           <button
@@ -160,7 +203,11 @@ export function ImageCropper({ file, onCancel, onComplete }: ImageCropperProps) 
         </p>
         <div
           ref={viewportRef}
-          className="relative aspect-square w-full cursor-move overflow-hidden rounded-2xl bg-black/40"
+          tabIndex={0}
+          role="application"
+          aria-label="Zone de cadrage : flèches pour déplacer l'image, Maj+flèches pour un déplacement rapide"
+          className="relative aspect-square w-full cursor-move overflow-hidden rounded-2xl bg-black/40 focus-visible:outline-lime"
+          onKeyDown={onViewportKeyDown}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
@@ -198,7 +245,11 @@ export function ImageCropper({ file, onCancel, onComplete }: ImageCropperProps) 
             aria-label="Zoom de l'image"
           />
         </div>
-        {error && <p className="mt-3 text-sm text-rose">{error}</p>}
+        {error && (
+          <p className="mt-3 text-sm text-rose" role="alert">
+            {error}
+          </p>
+        )}
         <div className="mt-4 flex gap-2">
           <button
             onClick={onCancel}

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { REPORT_REASONS } from "@/lib/types";
 
-export function ReportButton({ id }: { id: string }) {
+export function ReportButton({ id, color }: { id: string; color?: string }) {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState<string>(REPORT_REASONS[0]);
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
@@ -25,7 +25,11 @@ export function ReportButton({ id }: { id: string }) {
 
   if (status === "done") {
     return (
-      <p className="text-xs font-semibold text-midnight/60">
+      <p
+        className="text-xs font-semibold"
+        style={{ color: color ?? "rgba(23,21,31,0.6)" }}
+        role="status"
+      >
         Merci, le signalement a bien été transmis.
       </p>
     );
@@ -37,7 +41,10 @@ export function ReportButton({ id }: { id: string }) {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="mx-auto block text-[0.7rem] font-semibold text-midnight/45 underline underline-offset-2 hover:text-midnight"
+          // Couleur dérivée du thème de la surprise : le lien reste lisible
+          // même avec un fond sombre (au lieu d'un gris fixe devenu invisible).
+          style={{ color: color ?? "rgba(23,21,31,0.45)" }}
+          className="mx-auto block text-[0.7rem] font-semibold underline underline-offset-2 hover:opacity-70"
         >
           Signaler ce contenu
         </button>
@@ -62,7 +69,7 @@ export function ReportButton({ id }: { id: string }) {
             ))}
           </select>
           {status === "error" && (
-            <p className="mt-2 text-xs text-rose">
+            <p className="mt-2 text-xs text-rose" role="alert">
               L&apos;envoi a échoué. Réessaie plus tard.
             </p>
           )}

@@ -144,7 +144,7 @@ export default async function RevealPage({
             >
               Créer le mien
             </Link>
-            <ReportButton id={creation.id} />
+            <ReportButton id={creation.id} color={fg} />
           </div>
 
           <div className="mt-8">

@@ -16,9 +16,9 @@ export const metadata: Metadata = {
 export default async function CreatePage({
   searchParams,
 }: {
-  searchParams: Promise<{ surprise?: string; source?: string; draft?: string }>;
+  searchParams: Promise<{ surprise?: string; source?: string; draft?: string; mode?: string }>;
 }) {
-  const { surprise, source, draft } = await searchParams;
+  const { surprise, source, draft, mode } = await searchParams;
   const surprises = await db.listSurprises();
   const headerStore = await headers();
   const host = headerStore.get("host") ?? "localhost:3000";
@@ -52,6 +52,7 @@ export default async function CreatePage({
       <Creator
         surprises={surprises}
         initialSurpriseId={typeof surprise === "string" ? surprise : undefined}
+        initialMode={mode === "offline" ? "offline" : "connected"}
         initialSource={
           source === "image" || source === "text" || source === "library"
             ? source
