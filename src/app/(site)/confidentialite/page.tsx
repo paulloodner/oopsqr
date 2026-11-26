@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "Confidentialité",
   description:
     "Comment OOPSQR limite la collecte de données : pas de compte, contenus 14 jours, publicités avec consentement.",
+  alternates: { canonical: "/confidentialite" },
 };
 
 export default function PrivacyPage() {

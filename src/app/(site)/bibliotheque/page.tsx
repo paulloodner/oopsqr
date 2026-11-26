@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   title: "Bibliothèque de surprises",
   description:
     "Blagues Wi-Fi, fausses promesses, messages provocateurs : choisis une surprise prête à cacher derrière ton QR code.",
+  // Les filtres ?c=… ne créent pas de pages dupliquées.
+  alternates: { canonical: "/bibliotheque" },
 };
 
 export default async function LibraryPage({

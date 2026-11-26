@@ -31,6 +31,7 @@ import { isQrIcon, type QrIconKey } from "@/lib/qr-icons";
 import { ImageCropper, type CroppedImage } from "@/components/creator/ImageCropper";
 import { IconPicker } from "@/components/creator/IconPicker";
 import { AdSlot } from "@/components/AdSlot";
+import { useDebouncedValue } from "@/lib/use-debounced";
 import { Toast } from "@/components/Toast";
 
 type Mode = "connected" | "offline";
@@ -200,11 +201,14 @@ export function Creator({
   const stale = created !== null && created.signature !== signature;
   const displayUrl = created?.url ?? `${origin}/s/apercu`;
   const payload = mode === "offline" ? contentText : displayUrl;
+  // La matrice QR n'est recalculée qu'après 200 ms sans frappe (pas à chaque
+  // caractère), pour éviter de bloquer le thread principal pendant la saisie.
+  const debouncedPayload = useDebouncedValue(payload, 200);
 
   const qr = useMemo(
     () =>
       buildQrSvg({
-        data: payload || "OOPSQR",
+        data: debouncedPayload || "OOPSQR",
         fg: safeColor(fg, "#17151F"),
         bg: safeColor(bg, "#F7F5F0"),
         dotStyle,
@@ -218,7 +222,7 @@ export function Creator({
         preferredLevel: logo ? "H" : "Q",
       }),
     [
-      payload,
+      debouncedPayload,
       fg,
       bg,
       dotStyle,

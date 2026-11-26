@@ -30,6 +30,8 @@ export interface Creation {
   reportedAt: string | null;
   reportReason: string | null;
   status: CreationStatus;
+  /** Présence d'une image, exposée par les lectures allégées (sans base64). */
+  hasImage?: boolean;
 }
 
 export interface NewCreation {

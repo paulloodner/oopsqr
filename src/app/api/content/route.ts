@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { RETENTION_DAYS } from "@/lib/types";
 import { sanitizeCaption, sanitizeEmoji, sanitizeText } from "@/lib/validation";
-import { hasValidImageMagic, publicOrigin, rateKey } from "@/lib/request";
+import { hasSameOrigin, hasValidImageMagic, publicOrigin, rateKey } from "@/lib/request";
 import { NextResponse, type NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -9,6 +9,9 @@ export const dynamic = "force-dynamic";
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 
 export async function POST(req: NextRequest) {
+  if (!hasSameOrigin(req)) {
+    return NextResponse.json({ error: "origine_invalide" }, { status: 403 });
+  }
   const rate = await db.checkRateLimit(rateKey(req, "create"), 12, 60 * 60 * 1000);
   if (!rate.allowed) {
     return NextResponse.json(

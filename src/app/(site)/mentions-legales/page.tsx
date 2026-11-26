@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "Mentions légales",
   description:
     "Informations légales relatives au service OOPSQR : éditeur, hébergeur, propriété intellectuelle, responsabilité et signalement.",
+  alternates: { canonical: "/mentions-legales" },
 };
 
 export default function LegalPage() {

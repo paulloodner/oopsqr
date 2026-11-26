@@ -5,10 +5,45 @@ import { SurpriseCard } from "@/components/SurpriseCard";
 import { MiniCreator } from "@/components/MiniCreator";
 import { AdSlot } from "@/components/AdSlot";
 
-export const dynamic = "force-dynamic";
+// Page publique mise en cache (ISR, 5 min) plutôt que SSR à chaque requête :
+// le contenu change peu, et l'hébergeur gratuit reste ainsi réactif à chaud.
+export const revalidate = 300;
+
+const FAQ_ITEMS = [
+  {
+    q: "Faut-il créer un compte ?",
+    a: "Non. Tu écris, tu personalises, tu télécharges. Aucun email ni mot de passe.",
+  },
+  {
+    q: "Que se passe-t-il après 14 jours ?",
+    a: "Les contenus connectés sont supprimés. Les QR hors ligne, eux, continuent de fonctionner.",
+  },
+  {
+    q: "Puis-je mettre une image ?",
+    a: "Oui. JPG, PNG et WebP sont recadrés et compressés automatiquement avant l’envoi.",
+  },
+  {
+    q: "Le QR reste-t-il lisible ?",
+    a: "Oui : contraste, zone de silence et correction d’erreur sont vérifiés avant l’export.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQ_ITEMS.map((item) => ({
+    "@type": "Question",
+    name: item.q,
+    acceptedAnswer: { "@type": "Answer", text: item.a },
+  })),
+};
 
 export default async function HomePage() {
-  const surprises = (await db.listSurprises()).slice(0, 6);
+  // Le repli [] évite qu'une indisponibilité Neon empêche le build ou la page.
+  const surprises = await db
+    .listSurprises()
+    .then((rows) => rows.slice(0, 6))
+    .catch(() => []);
 
   return (
     <main>
@@ -216,30 +251,17 @@ export default async function HomePage() {
           <h2 className="mt-2 text-3xl md:text-4xl">Les questions qui reviennent.</h2>
         </div>
         <div className="mt-8 grid gap-3 md:grid-cols-2">
-          {[
-            {
-              q: "Faut-il créer un compte ?",
-              a: "Non. Tu écris, tu personalises, tu télécharges. Aucun email ni mot de passe.",
-            },
-            {
-              q: "Que se passe-t-il après 14 jours ?",
-              a: "Les contenus connectés sont supprimés. Les QR hors ligne, eux, continuent de fonctionner.",
-            },
-            {
-              q: "Puis-je mettre une image ?",
-              a: "Oui. JPG, PNG et WebP sont recadrés et compressés automatiquement avant l’envoi.",
-            },
-            {
-              q: "Le QR reste-t-il lisible ?",
-              a: "Oui : contraste, zone de silence et correction d’erreur sont vérifiés avant l’export.",
-            },
-          ].map((item) => (
+          {FAQ_ITEMS.map((item) => (
             <details key={item.q} className="faq-card">
               <summary>{item.q}</summary>
               <p>{item.a}</p>
             </details>
           ))}
         </div>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
       </section>
 
       {/* CTA */}

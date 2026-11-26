@@ -9,6 +9,8 @@ export const metadata: Metadata = {
   title: "Créer un QR code surprise",
   description:
     "Choisis un contenu, personnalise ton QR code et télécharge-le en PNG, SVG ou PDF. Sans inscription.",
+  // Les variantes ?surprise=, ?source= et ?draft= pointent vers la page de base.
+  alternates: { canonical: "/creer" },
 };
 
 export default async function CreatePage({

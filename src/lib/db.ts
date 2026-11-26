@@ -219,6 +219,19 @@ export const db = {
     const rows = await sql`SELECT * FROM creations WHERE id = ${id}`;
     return rows[0] ? rowToCreation(rows[0]) : null;
   },
+  /**
+   * Lecture allégée : ne récupère PAS `imageB64` (jusqu'à ~5 Mo par ligne).
+   * `hasImage` suffit pour l'affichage ; l'image n'est lue que par la route média.
+   */
+  async getCreationMeta(id: string): Promise<Creation | null> {
+    await ensureSchema();
+    const rows = await sql`
+      SELECT id, type, text, emoji, caption, imageMime, fg, bg, createdAt, expiresAt,
+             views, downloads, reportedAt, reportReason, status,
+             (imageB64 IS NOT NULL) AS hasimage
+      FROM creations WHERE id = ${id}`;
+    return rows[0] ? { ...rowToCreation(rows[0]), imageB64: null, hasImage: Boolean(rows[0].hasimage) } : null;
+  },
   async incrementView(id: string): Promise<void> {
     await ensureSchema();
     await sql`UPDATE creations SET views = views + 1 WHERE id = ${id}`;
@@ -237,14 +250,26 @@ export const db = {
   async listCreations(status?: string): Promise<Creation[]> {
     await ensureSchema();
     const rows = status
-      ? await sql`SELECT * FROM creations WHERE status = ${status} ORDER BY createdAt DESC`
-      : await sql`SELECT * FROM creations ORDER BY createdAt DESC`;
-    return (rows as any[]).map(rowToCreation);
+      ? await sql`
+        SELECT id, type, text, emoji, caption, imageMime, fg, bg, createdAt, expiresAt,
+               views, downloads, reportedAt, reportReason, status,
+               (imageB64 IS NOT NULL) AS hasimage
+        FROM creations WHERE status = ${status} ORDER BY createdAt DESC`
+      : await sql`
+        SELECT id, type, text, emoji, caption, imageMime, fg, bg, createdAt, expiresAt,
+               views, downloads, reportedAt, reportReason, status,
+               (imageB64 IS NOT NULL) AS hasimage
+        FROM creations ORDER BY createdAt DESC`;
+    return (rows as any[]).map((row) => ({ ...rowToCreation(row), imageB64: null, hasImage: Boolean(row.hasimage) }));
   },
   async listReports(): Promise<Creation[]> {
     await ensureSchema();
-    const rows = await sql`SELECT * FROM creations WHERE reportedAt IS NOT NULL ORDER BY reportedAt DESC`;
-    return (rows as any[]).map(rowToCreation);
+    const rows = await sql`
+      SELECT id, type, text, emoji, caption, imageMime, fg, bg, createdAt, expiresAt,
+             views, downloads, reportedAt, reportReason, status,
+             (imageB64 IS NOT NULL) AS hasimage
+      FROM creations WHERE reportedAt IS NOT NULL ORDER BY reportedAt DESC`;
+    return (rows as any[]).map((row) => ({ ...rowToCreation(row), imageB64: null, hasImage: Boolean(row.hasimage) }));
   },
   async clearReport(id: string): Promise<boolean> {
     await ensureSchema();

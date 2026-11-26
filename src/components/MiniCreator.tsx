@@ -17,6 +17,7 @@ import {
 import type { Surprise } from "@/lib/types";
 import { buildQrSvg, safeColor, utf8Bytes } from "@/lib/qr-render";
 import { exportPng } from "@/lib/download";
+import { useDebouncedValue } from "@/lib/use-debounced";
 import { QR_THEMES } from "@/lib/themes";
 import type { QrIconKey } from "@/lib/qr-icons";
 
@@ -58,10 +59,12 @@ export function MiniCreator({ surprises }: MiniCreatorProps) {
 
   const theme = MINI_THEMES.find((item) => item.id === themeId) ?? MINI_THEMES[0];
   const previewText = text.trim().slice(0, 220);
+  // Aperçu recalculé après 200 ms de pause de frappe, pas à chaque caractère.
+  const debouncedText = useDebouncedValue(previewText, 200);
 
   const qrInput = useMemo(
     () => ({
-      data: previewText,
+      data: debouncedText,
       fg: safeColor(theme.fg, "#17151F"),
       bg: safeColor(theme.bg, "#F7F5F0"),
       dotStyle: theme.dot,
@@ -73,12 +76,12 @@ export function MiniCreator({ surprises }: MiniCreatorProps) {
       iconBottom: null,
       preferredLevel: "Q" as const,
     }),
-    [previewText, theme, icon]
+    [debouncedText, theme, icon]
   );
 
   const qr = useMemo(
-    () => (previewText ? buildQrSvg(qrInput) : null),
-    [previewText, qrInput]
+    () => (debouncedText ? buildQrSvg(qrInput) : null),
+    [debouncedText, qrInput]
   );
 
   function randomSurprise() {

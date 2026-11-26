@@ -1,11 +1,14 @@
 import { db } from "@/lib/db";
 import { REPORT_REASONS } from "@/lib/types";
-import { rateKey } from "@/lib/request";
+import { hasSameOrigin, rateKey } from "@/lib/request";
 import { NextResponse, type NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
+  if (!hasSameOrigin(req)) {
+    return NextResponse.json({ error: "origine_invalide" }, { status: 403 });
+  }
   const rate = await db.checkRateLimit(rateKey(req, "report"), 20, 60 * 60 * 1000);
   if (!rate.allowed) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });

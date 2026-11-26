@@ -8,11 +8,12 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const creation = await db.getCreation(id);
+  // Garde sur les métadonnées (sans base64), puis une SEULE lecture de l'image.
+  const creation = await db.getCreationMeta(id);
   if (
     !creation ||
     creation.status !== "active" ||
-    !creation.imageB64 ||
+    !creation.hasImage ||
     new Date(creation.expiresAt).getTime() <= Date.now()
   ) {
     return new NextResponse("Introuvable", { status: 404 });
