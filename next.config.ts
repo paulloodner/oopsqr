@@ -10,8 +10,11 @@ const nextConfig: NextConfig = {
     return config;
   },
   async headers() {
-    // CSP en mode "report only" : on observe d'abord, pour ne casser ni la
-    // régie publicitaire (Adsterra) ni les éventuels blocs AdSense futurs.
+    // CSP appliquée (enforcement). Les sources autorisées couvrent Next.js
+    // (scripts inline RSC), les polices auto-hébergées, et la régie Adsterra
+    // (script bauval.org + frames publicitaires). Tout le reste est bloqué :
+    // object-src 'none', frame-ancestors 'self', base-uri/form-action 'self'.
+    // La bannière native est re-vérifiée après chaque déploiement.
     const csp = [
       "default-src 'self'",
       "base-uri 'self'",
@@ -36,7 +39,7 @@ const nextConfig: NextConfig = {
           { key: "X-Frame-Options", value: "SAMEORIGIN" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
-          { key: "Content-Security-Policy-Report-Only", value: csp },
+          { key: "Content-Security-Policy", value: csp },
         ],
       },
     ];
