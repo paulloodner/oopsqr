@@ -110,6 +110,16 @@ export default async function RevealPage({
                 {creation.hasImage ? (
                   <img
                     src={`/api/media/${creation.id}`}
+                    // Dimensions intrinsèques : le ratio 1:1 est réservé avant le
+                    // chargement (pas de décalage de mise en page). Les images
+                    // sont générées en 1200×1200 ; `sizes` limite le téléchargement
+                    // à la largeur réellement affichée. Une seule déclinaison
+                    // existe aujourd'hui, d'où un srcSet à un seul candidat.
+                    srcSet={`/api/media/${creation.id} 1200w`}
+                    sizes="(max-width: 640px) 90vw, 32rem"
+                    width={1200}
+                    height={1200}
+                    decoding="async"
                     alt={creation.caption ?? "Surprise"}
                     className="mx-auto w-full rounded-2xl object-contain"
                   />
