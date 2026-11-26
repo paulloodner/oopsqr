@@ -126,7 +126,8 @@ img {
 }
 
 .btn-violet {
-  background: var(--color-violet);
+  /* Violet assombri : 8,98:1 sur texte blanc (au lieu de 4,23:1, sous WCAG AA). */
+  background: var(--color-violet-deep);
   color: #fff;
   box-shadow: 4px 4px 0 #2b1a52;
 }
@@ -1406,4 +1407,27 @@ img {
     scroll-behavior: auto;
   }
 }
+}
+
+/* --------------------------------------------------------------------------
+   Accessibilite WCAG AA (contraste >= 4,5:1 pour les petits textes).
+   Les opacites faibles du texte secondaire sont remontees de facon centralisee,
+   mesurees sur les fonds reels du site :
+   - midnight a 65 % : 5,45:1 sur creme #F7F5F0, 5,60:1 sur blanc ;
+   - cream a 55 % : 5,70:1 sur midnight, 5,49:1 sur midnight-2.
+   Ces regles non layeres prennent le pas sur les utilitaires Tailwind.
+--------------------------------------------------------------------------- */
+.text-midnight\/35,
+.text-midnight\/40,
+.text-midnight\/45,
+.text-midnight\/50,
+.text-midnight\/55 {
+  color: rgb(23 21 31 / 0.65);
+}
+
+.text-cream\/35,
+.text-cream\/40,
+.text-cream\/45,
+.text-cream\/50 {
+  color: rgb(247 245 240 / 0.55);
 }
