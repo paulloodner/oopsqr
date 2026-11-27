@@ -166,6 +166,15 @@ La persistance est désormais **externalisée (Neon Postgres)**, donc le critèr
 - la doc officielle précise : *ne pas utiliser les instances gratuites en
   production* — acceptable pour un service naissant à faible trafic.
 
+**Anti cold-start (mis en place)** : la route `GET /api/health` (sans accès DB)
+est pinguée toutes les **10 minutes** par le workflow GitHub Actions
+`.github/workflows/keepalive.yml` — **gratuit** car le dépôt est public. Le ping
+reste sous le seuil des 15 min de sommeil de Render, donc le service ne
+s'endort plus et les visiteurs n'attendent plus ~1 min. Déclenchement manuel
+possible : onglet **Actions → Keepalive (anti cold-start) → Run workflow**.
+⚠️ GitHub désactive les tâches planifiées après **60 jours d'inactivité** du
+dépôt (email de notification) : réactiver le workflow si cela arrive.
+
 Rappel légal : quel que soit l'hébergeur choisi, son **nom + adresse** doivent
 figurer dans les mentions légales (LCEN art. 1-1). Les identités légales
 d'hébergeurs vérifiés sont prêtes dans `LEGAL.hostCandidates`.
