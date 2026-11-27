@@ -1,0 +1,27 @@
+name: Keepalive (anti cold-start)
+
+# Empêche l'instance Render Free de s'endormir après 15 min d'inactivité.
+# Gratuit : GitHub Actions est illimité sur les dépôts publics.
+# Le ping toutes les 10 minutes reste sous le seuil des 15 minutes de Render.
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: # permet un déclenchement manuel depuis l'onglet Actions
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping /api/health
+        run: |
+          for i in 1 2 3; do
+            code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 45 https://oopsqr.onrender.com/api/health || true)
+            echo "Tentative $i : HTTP $code"
+            if [ "$code" = "200" ]; then
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "Le service ne répond pas après 3 tentatives."
+          exit 1
